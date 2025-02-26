@@ -58,7 +58,8 @@ public class PlayerController : MonoBehaviour
 
             if (cellData != null && cellData.Passable)
             {
-                m_CellPosition = newCellTarget;
+                //m_CellPosition = newCellTarget;
+                GameManager.Instance.TurnManager.Tick();
                 MoveTo(newCellTarget);
             }
         }

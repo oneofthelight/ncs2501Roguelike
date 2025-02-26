@@ -12,14 +12,14 @@ public class BoardManager : MonoBehaviour
     {
       public bool Passable;
     }
-    public PlayerController Player;
+    //public PlayerController Player;
 
     private Tilemap m_Tilemap;
     private CellData[,] m_BoardData;
     private Grid m_Grid;
 
     // Start is called before the first frame update
-    void Start()
+    public void Init()
     {
         m_Tilemap = GetComponentInChildren<Tilemap>();
         m_BoardData = new CellData[Width, Height];  // 이 내용은 셀데이터의 전체의 내용
@@ -47,7 +47,6 @@ public class BoardManager : MonoBehaviour
                 m_Tilemap.SetTile(new Vector3Int(x, y, 0), tile);
             }
         }
-        Player.Spawn(this, new Vector2Int(1,1));
     }
     public Vector3 CellToWorld(Vector2Int cellIndex)
     {
