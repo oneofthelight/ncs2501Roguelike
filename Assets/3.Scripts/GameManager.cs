@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class GameManager : MonoBehaviour
     public BoardManager BoardManager;
     public PlayerController PlayerController;
     public TurnManager TurnManager {get; private set;}
+    public UIDocument UIDoc;
+    private Label m_FoodLabel;
     private int m_FoodAmount = 100;
     private void Awake()
     {
@@ -22,14 +25,18 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-        TurnManager = new TurnManager();
-        TurnManager.OnTick += OnTurnHappen;
+        m_FoodLabel = UIDoc.rootVisualElement.Q<Label>("FoodLabel");
+        m_FoodLabel.text = "Food : " + m_FoodAmount;
+
+        TurnManager = new TurnManager();  // 턴 매니저 지정
+        TurnManager.OnTick += OnTurnHappen;  // OnTick 메소드로 OnTurnHappen넣기
+
         BoardManager.Init();
         PlayerController.Spawn(BoardManager, new Vector2Int(1, 1));
     }
     void OnTurnHappen()
     {
-        m_FoodAmount--;
-        Debug.Log($"Current amount of food : {m_FoodAmount}");
+        m_FoodAmount -= 1;
+        m_FoodLabel.text = "Food : " + m_FoodAmount;
     }
 }
