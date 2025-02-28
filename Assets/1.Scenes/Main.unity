@@ -427,8 +427,14 @@ MonoBehaviour:
   FoodPrefab:
   - {fileID: 7100854180994657263, guid: 60dc5708d2524b34bbb6314f172af8c5, type: 3}
   - {fileID: 2879819470561051101, guid: b7798b87617bbf342a21fecc053ec9e8, type: 3}
-  minFood: 2
-  maxFood: 6
+  - {fileID: 6309707103209453458, guid: 846b387ea0d97684e9250953306f2337, type: 3}
+  - {fileID: 9188755441426637923, guid: c2e6607f42e6d6242a9156b9269a7fa0, type: 3}
+  WallPrefab:
+  - {fileID: 8456086517094407085, guid: c42c514a318e8734fba4926dfd20d65d, type: 3}
+  - {fileID: 9176491215990204860, guid: 56ad0a9b966b91b49b116c2ab41b9e84, type: 3}
+  - {fileID: 1532588093707507692, guid: f4d7ab2854d62e24396201b823d54e53, type: 3}
+  minFood: 3
+  maxFood: 7
 --- !u!1 &1565614324
 GameObject:
   m_ObjectHideFlags: 0

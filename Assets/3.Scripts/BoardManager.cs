@@ -9,16 +9,25 @@ public class BoardManager : MonoBehaviour
 
     public int Height;
     public Tile[] GroundTiles;
-    public Tile[] WallTiles;
+    public Tile[] WallTiles;  // 테두리
     public FoodObject[] FoodPrefab;
+    public WallObject[] WallPrefab; // 벽
     public int minFood;
     public int maxFood;
+    public void SetCellTile(Vector2Int cellIndex, Tile tile)
+    {
+        m_Tilemap.SetTile(new Vector3Int(cellIndex.x, cellIndex.y, 0), tile);
+    }
     public class CellData
     {
         public bool Passable;
         public CellObject ContainedObject;
     }
     //public PlayerController Player;
+    public Tile GetCellTile(Vector2Int cellIndex)
+    {
+        return m_Tilemap.GetTile<Tile>(new Vector3Int(cellIndex.x, cellIndex.y, 0));
+    }
 
     private Tilemap m_Tilemap;
     private CellData[,] m_BoardData;
@@ -58,6 +67,7 @@ public class BoardManager : MonoBehaviour
         }
         // 플레이어가 등장하는 위치는 빈타일이 아니므로 빼준다
         m_EmptyCellsList.Remove(new Vector2Int(1, 1)); 
+        GenerateWall();
         GenerateFood();
     }
     public Vector3 CellToWorld(Vector2Int cellIndex)
@@ -85,12 +95,33 @@ public class BoardManager : MonoBehaviour
             Vector2Int coord = m_EmptyCellsList[randomIndex];
 
             m_EmptyCellsList.RemoveAt(randomIndex);  //RemoveAt에는 int index 값이 들어감
-            CellData data = m_BoardData[coord.x, coord.y];
+            
             int foodType = Random.Range(0, FoodPrefab.Length);  
             FoodObject newFood = Instantiate(FoodPrefab[foodType]);  // FoodPreFab에 인덱스 값을 추가함(프리팝을 배열로 만듦)
-            newFood.transform.position = CellToWorld(coord);
-            data.ContainedObject = newFood;
+            AddObject(newFood, coord);
         }
+    }
+    void GenerateWall()
+    {
+        int wallCount = Random.Range(6, 10);
+        for (int i = 0; i < wallCount; ++i)
+        {
+            int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
+            Vector2Int coord = m_EmptyCellsList[randomIndex];  // 랜덤으로 빈 셀 선택
+
+            m_EmptyCellsList.RemoveAt(randomIndex);            // 벽 제거   
+
+            int wallType = Random.Range(0, WallPrefab.Length);
+            WallObject newWall = Instantiate(WallPrefab[wallType]);      // 벽 생성
+            AddObject(newWall, coord);
+        }
+    }
+    void AddObject(CellObject obj, Vector2Int coord)
+    {
+        CellData data = m_BoardData[coord.x, coord.y];
+        obj.transform.position = CellToWorld(coord);
+        data.ContainedObject = obj;
+        obj.Init(coord);
     }
     
 }
