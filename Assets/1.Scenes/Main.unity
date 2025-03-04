@@ -433,6 +433,7 @@ MonoBehaviour:
   - {fileID: 8456086517094407085, guid: c42c514a318e8734fba4926dfd20d65d, type: 3}
   - {fileID: 9176491215990204860, guid: 56ad0a9b966b91b49b116c2ab41b9e84, type: 3}
   - {fileID: 1532588093707507692, guid: f4d7ab2854d62e24396201b823d54e53, type: 3}
+  ExitPrefab: {fileID: 6393800969445973906, guid: 0fcfcb3e47d2b674380314c7534c5996, type: 3}
   minFood: 3
   maxFood: 7
 --- !u!1 &1565614324

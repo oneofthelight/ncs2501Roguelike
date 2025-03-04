@@ -12,6 +12,7 @@ public class BoardManager : MonoBehaviour
     public Tile[] WallTiles;  // 테두리
     public FoodObject[] FoodPrefab;
     public WallObject[] WallPrefab; // 벽
+    public ExitCellObject ExitPrefab;
     public int minFood;
     public int maxFood;
     public void SetCellTile(Vector2Int cellIndex, Tile tile)
@@ -33,7 +34,7 @@ public class BoardManager : MonoBehaviour
     private CellData[,] m_BoardData;
     private Grid m_Grid;
     private List<Vector2Int> m_EmptyCellsList;
-    // Start is called before the first frame update
+   
     public void Init()
     {
         m_Tilemap = GetComponentInChildren<Tilemap>();
@@ -66,9 +67,35 @@ public class BoardManager : MonoBehaviour
             }
         }
         // 플레이어가 등장하는 위치는 빈타일이 아니므로 빼준다
-        m_EmptyCellsList.Remove(new Vector2Int(1, 1)); 
+        m_EmptyCellsList.Remove(new Vector2Int(1, 1));
+
+        // Exit
+        Vector2Int endCoord = new Vector2Int(Width - 2, Height - 2);
+        AddObject(Instantiate(ExitPrefab), endCoord);
+        m_EmptyCellsList.Remove(endCoord);            // 이걸 빼는 이유는 음식이나 벽이 생성 되면 안되기 때문
+
         GenerateWall();
         GenerateFood();
+    }
+    public void Clean()
+    {
+        //no board data, so exit early, nothing to clean
+        if (m_BoardData == null) return;
+
+        for (int y = 0; y < Height; ++y)
+        {
+            for (int x = 0; x < Width; ++x)
+            {
+                var cellData = m_BoardData[x, y];
+
+                if (cellData.ContainedObject != null)
+                {
+                    Destroy(cellData.ContainedObject.gameObject);
+                }
+
+                SetCellTile(new Vector2Int(x, y), null);
+            }
+        }
     }
     public Vector3 CellToWorld(Vector2Int cellIndex)
     {
