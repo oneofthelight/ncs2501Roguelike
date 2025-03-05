@@ -1,15 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    public float MoveSpeed = 5.0f;
     private BoardManager m_Board;
     private Vector2Int m_CellPosition;
     private bool m_IsGameOver;
+    private bool m_IsMoving;
+    private Vector3 m_MoveTarget;
+    private Animator m_Animator;
+    private void Awake()
+    {
+        m_Animator = GetComponent<Animator>();
+    }
     public void Init()
     {
+        m_IsMoving = false;
         m_IsGameOver = false;
     }
     public void GameOver()
@@ -21,12 +31,24 @@ public class PlayerController : MonoBehaviour
         m_Board = boardManager;
         m_CellPosition = cell;
         // 보드 에서의 player위치 지정 => 화면에서 제대로된 위치에 표시
-        MoveTo(cell);
+        MoveTo(cell, true);
     }
-    public void MoveTo(Vector2Int cell)
+    public void MoveTo(Vector2Int cell, bool immediate = false)
     {
         m_CellPosition = cell;
-        transform.position = m_Board.CellToWorld(m_CellPosition);
+
+        if (immediate)
+        {
+            m_IsMoving = false;
+            transform.position = m_Board.CellToWorld(m_CellPosition);
+        }
+        else
+        {
+            m_IsMoving = true;
+            m_MoveTarget = m_Board.CellToWorld(m_CellPosition);
+        }
+        // todo : StringToHash 로 변환
+        m_Animator.SetBool("Moving", m_IsMoving);
     }
     void Start()
     {
@@ -40,6 +62,20 @@ public class PlayerController : MonoBehaviour
             if (Keyboard.current.enterKey.wasPressedThisFrame)
             {
                 GameManager.Instance.StartNewGame();
+            }
+            return;
+        }
+        if (m_IsMoving)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, m_MoveTarget, MoveSpeed * Time.deltaTime);
+
+            if (transform.position == m_MoveTarget)
+            {
+                m_IsMoving = false;
+                m_Animator.SetBool("Moving", false);
+                var cellData = m_Board.GetCellData(m_CellPosition);
+                if (cellData.ContainedObject != null)
+                    cellData.ContainedObject.PlayerEntered();
             }
             return;
         }
@@ -84,7 +120,10 @@ public class PlayerController : MonoBehaviour
                 {
                     MoveTo(newCellTarget);  //여기 코드와
                     // 플레이어를 먼저 셀로 이동 시킨 후 호출
-                    cellData.ContainedObject.PlayerEntered();  // 여기 아래 코드의 순서가 바뀌면 안됨
+                }
+                else if (cellData.ContainedObject.PlayerWantsToEnter() == false)
+                {
+                    m_Animator.SetTrigger("Attack");
                 }
             }
         }
