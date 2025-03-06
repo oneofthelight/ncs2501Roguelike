@@ -1,14 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     public float MoveSpeed = 5.0f;
+    public Vector2Int Cell 
+    {
+        get
+        {
+            return m_CellPosition;
+        }
+        private set{}
+    }
+    private readonly int hashMoving = Animator.StringToHash("Moving");
+    private readonly int hashAttack = Animator.StringToHash("Attack");
     private BoardManager m_Board;
-    private Vector2Int m_CellPosition;
+    private Vector2Int m_CellPosition;     
     private bool m_IsGameOver;
     private bool m_IsMoving;
     private Vector3 m_MoveTarget;
@@ -47,8 +58,8 @@ public class PlayerController : MonoBehaviour
             m_IsMoving = true;
             m_MoveTarget = m_Board.CellToWorld(m_CellPosition);
         }
-        // todo : StringToHash 로 변환
-        m_Animator.SetBool("Moving", m_IsMoving);
+        
+        m_Animator.SetBool(hashMoving, m_IsMoving);
     }
     void Start()
     {
@@ -72,7 +83,7 @@ public class PlayerController : MonoBehaviour
             if (transform.position == m_MoveTarget)
             {
                 m_IsMoving = false;
-                m_Animator.SetBool("Moving", false);
+                m_Animator.SetBool(hashMoving, false);
                 var cellData = m_Board.GetCellData(m_CellPosition);
                 if (cellData.ContainedObject != null)
                     cellData.ContainedObject.PlayerEntered();
@@ -116,14 +127,17 @@ public class PlayerController : MonoBehaviour
                 {
                     MoveTo(newCellTarget);
                 }
-                else if (cellData.ContainedObject.PlayerWantsToEnter())
+                else
                 {
-                    MoveTo(newCellTarget);  //여기 코드와
-                    // 플레이어를 먼저 셀로 이동 시킨 후 호출
-                }
-                else if (cellData.ContainedObject.PlayerWantsToEnter() == false)
-                {
-                    m_Animator.SetTrigger("Attack");
+                    if (cellData.ContainedObject.PlayerWantsToEnter())
+                    {
+                        MoveTo(newCellTarget);  //여기 코드와
+                                                // 플레이어를 먼저 셀로 이동 시킨 후 호출
+                    }
+                    else 
+                    {
+                        m_Animator.SetTrigger(hashAttack);
+                    }
                 }
             }
         }

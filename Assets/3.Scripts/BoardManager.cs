@@ -13,6 +13,7 @@ public class BoardManager : MonoBehaviour
     public FoodObject[] FoodPrefab;
     public WallObject[] WallPrefab; // 벽
     public ExitCellObject ExitPrefab;
+    public EnemyObject[] EnemyPrefab;
     public int minFood;
     public int maxFood;
     public void SetCellTile(Vector2Int cellIndex, Tile tile)
@@ -76,6 +77,7 @@ public class BoardManager : MonoBehaviour
 
         GenerateWall();
         GenerateFood();
+        GenerateEnemy();
     }
     public void Clean()
     {
@@ -141,6 +143,21 @@ public class BoardManager : MonoBehaviour
             int wallType = Random.Range(0, WallPrefab.Length);
             WallObject newWall = Instantiate(WallPrefab[wallType]);      // 벽 생성
             AddObject(newWall, coord);
+        }
+    }
+    void GenerateEnemy()
+    {
+        int enemyCount = Random.Range(1, 3);
+        for (int i = 0; i < enemyCount; i++)
+        {
+            int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
+            Vector2Int coord = m_EmptyCellsList[randomIndex];  // 랜덤으로 빈 셀 선택
+
+            m_EmptyCellsList.RemoveAt(randomIndex);            // 벽 제거   
+
+            int enemyType = Random.Range(0, EnemyPrefab.Length);
+            EnemyObject newEnemy = Instantiate(EnemyPrefab[enemyType]);      // 벽 생성
+            AddObject(newEnemy, coord);
         }
     }
     void AddObject(CellObject obj, Vector2Int coord)
