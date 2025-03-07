@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
+    
     // Sigleton 싱글톤이 중요한 기능을 static 처럼 사용하기 위해 쓰는 방식
     #region Singleton
     public static GameManager Instance { get; private set; }

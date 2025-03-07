@@ -5,6 +5,7 @@ using UnityEngine.Tilemaps;
 
 public class BoardManager : MonoBehaviour
 {
+    public AudioClip collectedClip;
     public int Width;
 
     public int Height;
@@ -16,6 +17,11 @@ public class BoardManager : MonoBehaviour
     public EnemyObject[] EnemyPrefab;
     public int minFood;
     public int maxFood;
+    public int minWall;
+    public int maxWall;
+    public int minEnemy;
+    public int maxEnemy;
+
     public void SetCellTile(Vector2Int cellIndex, Tile tile)
     {
         m_Tilemap.SetTile(new Vector3Int(cellIndex.x, cellIndex.y, 0), tile);
@@ -132,7 +138,7 @@ public class BoardManager : MonoBehaviour
     }
     void GenerateWall()
     {
-        int wallCount = Random.Range(6, 10);
+        int wallCount = Random.Range(minWall, maxWall + 1);
         for (int i = 0; i < wallCount; ++i)
         {
             int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
@@ -147,7 +153,7 @@ public class BoardManager : MonoBehaviour
     }
     void GenerateEnemy()
     {
-        int enemyCount = Random.Range(1, 3);
+        int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
         for (int i = 0; i < enemyCount; i++)
         {
             int randomIndex = Random.Range(0, m_EmptyCellsList.Count);

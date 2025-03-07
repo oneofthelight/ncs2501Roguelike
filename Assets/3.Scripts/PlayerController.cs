@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    AudioSource audioSource;
+    public AudioClip Attack;
     public float MoveSpeed = 5.0f;
     public Vector2Int Cell 
     {
@@ -126,6 +128,7 @@ public class PlayerController : MonoBehaviour
                 if (cellData.ContainedObject == null)  // 들어가려고 할때
                 {
                     MoveTo(newCellTarget);
+                    
                 }
                 else
                 {
