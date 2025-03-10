@@ -5,6 +5,7 @@ using UnityEngine;
 public class FoodObject : CellObject
 {
     public int AmountGranted = 10;
+    public AudioClip clip;
     public override void PlayerEntered()
     {
         
@@ -13,5 +14,8 @@ public class FoodObject : CellObject
 
         // 플레이어의 체력(food) 증가
         GameManager.Instance.ChangeFood(AmountGranted);
+
+        // 음향 효과 발생
+        GameManager.Instance.PlaySound(clip);
     }
 }

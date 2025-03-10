@@ -17,13 +17,15 @@ public class GameManager : MonoBehaviour
     public PlayerController PlayerController;
     public TurnManager TurnManager {get; private set;}
     public UIDocument UIDoc;
+    public GameObject AndroidPanel;
+    public AudioSource audioSource;
     #endregion
 
     #region Private
     private const string GOS1 = "Game Over!\n\nYou traveled through" ;
     private const string GOS2 = "levels \n\n(Press Enter to New Game)";
     private Label m_FoodLabel;
-    private int m_FoodAmount = 10;
+    private int m_FoodAmount = 30;
     private int m_CurrentLevel = 0;
     private VisualElement m_GameOverPanel;
     private Label m_GameOverMessage;
@@ -41,6 +43,15 @@ public class GameManager : MonoBehaviour
     
     void Start()
     {
+#if UNITY_ANDROID
+        Camera camera = Camera.main;
+        camera.orthographicSize = 12;
+        camera.transform.position = new Vector3(6, 4, -10); 
+        AndroidPanel.SetActive(true);
+#else
+        AndroidPanel.SetActive(false);
+#endif
+        audioSource = GetComponent<AudioSource>();
         TurnManager = new TurnManager();  // 턴 매니저 지정
         TurnManager.OnTick += OnTurnHappen;  // OnTick 메소드로 OnTurnHappen넣기
 
@@ -52,13 +63,14 @@ public class GameManager : MonoBehaviour
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
         StartNewGame();
+        
     }
     public void StartNewGame()
     {
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
         m_CurrentLevel = 0;
-        m_FoodAmount = 20;
+        m_FoodAmount = 40;
         m_FoodLabel.text = "Food : " + m_FoodAmount;
 
         PlayerController.Init();
@@ -91,6 +103,9 @@ public class GameManager : MonoBehaviour
             m_GameOverMessage.text = $"{GOS1} {m_CurrentLevel} {GOS2}";
         }
     }
-
+    public void PlaySound(AudioClip clip)
+    {
+        audioSource.PlayOneShot(clip);
+    }
     
 }

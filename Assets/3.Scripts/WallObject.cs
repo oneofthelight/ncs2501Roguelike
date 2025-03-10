@@ -7,8 +7,8 @@ public class WallObject : CellObject
     public Tile ObstacleTile;
     public Tile HP1Tile;
     public int MaxHealth = 3;
-
-    private int m_HealthPoint;
+    public AudioClip Clip;
+    private int m_HealthPoint;  
     private Tile m_OriginalTile;
 
     public override void Init(Vector2Int cell)
@@ -26,6 +26,7 @@ public class WallObject : CellObject
     public override bool PlayerWantsToEnter()
     {
         m_HealthPoint -= 1;
+        GameManager.Instance.PlaySound(Clip);
         if (m_HealthPoint > 0)
         {
             if(m_HealthPoint == 1)
