@@ -49,11 +49,11 @@ public class EnemyObject : CellObject
             return false;
         }
 
-        //remove enemy from current cell
+        // 현재 셀에서 적 제거
         var currentCell = board.GetCellData(m_Cell);
         currentCell.ContainedObject = null;
 
-        //add it to the next cell
+        // 셀 추가
         targetCell.ContainedObject = this;
         m_Cell = coord;
         transform.position = board.CellToWorld(coord);
@@ -101,7 +101,6 @@ public class EnemyObject : CellObject
 
     bool TryMoveInX(int xDist)
     {
-        //try to get closer in x
 
         //player to our right
         if (xDist > 0)

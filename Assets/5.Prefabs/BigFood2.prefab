@@ -98,3 +98,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AmountGranted: 15
+  clip: {fileID: 8300000, guid: 062161c1897a54088a5430f8c197e1b8, type: 3}

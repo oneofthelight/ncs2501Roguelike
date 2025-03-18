@@ -52,17 +52,17 @@ public class GameManager : MonoBehaviour
         AndroidPanel.SetActive(false);
 #endif
         audioSource = GetComponent<AudioSource>();
-        TurnManager = new TurnManager();  // 턴 매니저 지정
-        TurnManager.OnTick += OnTurnHappen;  // OnTick 메소드로 OnTurnHappen넣기
+        TurnManager = new TurnManager();            // 턴 매니저 지정
+        TurnManager.OnTick += OnTurnHappen;         // OnTick 메소드로 OnTurnHappen넣기
 
         m_FoodLabel = UIDoc.rootVisualElement.Q<Label>("FoodLabel");
         m_FoodLabel.text = "Food : " + m_FoodAmount;
 
-        m_GameOverPanel = UIDoc.rootVisualElement.Q<VisualElement>("GameOverPanel");
-        m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");
+        m_GameOverPanel = UIDoc.rootVisualElement.Q<VisualElement>("GameOverPanel");  // 게임오버 패널 호출  
+        m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");              // 게임오버 메시지 가져오기  
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
-        StartNewGame();
+        StartNewGame();                                                               // 새 게임 불러오기
         
     }
     public void StartNewGame()
@@ -87,7 +87,7 @@ public class GameManager : MonoBehaviour
 
         m_CurrentLevel++;
     }
-    void OnTurnHappen()
+    void OnTurnHappen()             // 턴 소비
     {
         ChangeFood(-1);
     }
@@ -95,13 +95,14 @@ public class GameManager : MonoBehaviour
     public void ChangeFood(int amount)
     {
         m_FoodAmount += amount;
-        m_FoodLabel.text = "Food : " + m_FoodAmount;
-        if (m_FoodAmount <= 0)     // 그냥 0이 아니라 작거나로 하는 이유는 혹시나하는 상황을 대비해서
+        if (m_FoodAmount <= 0)                          // 그냥 0이 아니라 작거나로 하는 이유는 혹시나하는 상황을 대비해서
         {
+            m_FoodAmount = 0;
             PlayerController.GameOver();
             m_GameOverPanel.style.visibility = Visibility.Visible;
             m_GameOverMessage.text = $"{GOS1} {m_CurrentLevel} {GOS2}";
         }
+        m_FoodLabel.text = "Food : " + m_FoodAmount;
     }
     public void PlaySound(AudioClip clip)
     {
