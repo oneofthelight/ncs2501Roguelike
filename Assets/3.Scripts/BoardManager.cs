@@ -45,7 +45,6 @@ public class BoardManager : MonoBehaviour
     {
         m_Tilemap = GetComponentInChildren<Tilemap>();
         m_BoardData = new CellData[Width, Height];  // 이 내용은 셀데이터의 전체의 내용
-        //m_Grid = GetComponentInChildren<Grid>(); 현재 자기 탭에 존재하기 때문에 이 코드가 좀더 안전하게 코드 사용 밑과 성능 차이 x
         m_Grid = GetComponent<Grid>();  
         m_EmptyCellsList = new List<Vector2Int>(); 
         for (int y = 0; y < Height; ++y)
