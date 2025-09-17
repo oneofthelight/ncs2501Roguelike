@@ -6,7 +6,7 @@ public class EnemyObject : CellObject
 
 {
     public int Health = 3;
-
+    public int Amount = 3;
     private int m_CurrentHealth;
 
     private void Awake()
@@ -32,6 +32,7 @@ public class EnemyObject : CellObject
         if (m_CurrentHealth <= 0)
         {
             Destroy(gameObject);
+            GameManager.Instance.ChangeFood(Amount);
         }
 
         return false;
@@ -76,7 +77,7 @@ public class EnemyObject : CellObject
             || (yDist == 0 && absXDist == 1))
         {
             //we are adjacent to the player, attack!
-            GameManager.Instance.ChangeFood(-3);
+            GameManager.Instance.ChangeFood(-2);
         }
         else
         {

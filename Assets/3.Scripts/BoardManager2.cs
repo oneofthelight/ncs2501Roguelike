@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class BoardManager : MonoBehaviour
+public class BoardManager2 : MonoBehaviour
 {
     public AudioClip collectedClip;
     public int Width;

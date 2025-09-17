@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
 
     #region Public
     public BoardManager BoardManager;
+    public BoardManager BoardManager2;
     public PlayerController PlayerController;
     public TurnManager TurnManager {get; private set;}
     public UIDocument UIDoc;
@@ -62,6 +63,7 @@ public class GameManager : MonoBehaviour
         m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");              // 게임오버 메시지 가져오기  
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
+       
         StartNewGame();                                                               // 새 게임 불러오기
         
     }
@@ -70,13 +72,17 @@ public class GameManager : MonoBehaviour
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
         m_CurrentLevel = 0;
-        m_FoodAmount = 40;
+        m_FoodAmount = 100;
         m_FoodLabel.text = "Food : " + m_FoodAmount;
 
         PlayerController.Init();
         //BoardManager.Clean();
         //BoardManager.Init();
         //PlayerController.Spawn(BoardManager, new Vector2Int(1, 1));
+        if(m_CurrentLevel > 5 )
+        {
+            NextLevel();
+        } 
         NewLevel();
     }
     public void NewLevel()
@@ -91,7 +97,14 @@ public class GameManager : MonoBehaviour
     {
         ChangeFood(-1);
     }
+    public void  NextLevel()
+    {
+        BoardManager2.Clean();
+        BoardManager2.Init();
+        PlayerController.Spawn(BoardManager2, new Vector2Int(1, 1));
 
+        m_CurrentLevel++;
+    }
     public void ChangeFood(int amount)
     {
         m_FoodAmount += amount;
