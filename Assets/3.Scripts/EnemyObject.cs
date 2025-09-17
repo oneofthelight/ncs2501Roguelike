@@ -7,6 +7,7 @@ public class EnemyObject : CellObject
 {
     public int Health = 3;
     public int Amount = 3;
+    public float healAmountOnDeath = 10f;
     private int m_CurrentHealth;
 
     private void Awake()
@@ -31,8 +32,9 @@ public class EnemyObject : CellObject
 
         if (m_CurrentHealth <= 0)
         {
+            hpBar.m_CurrentHealth += healAmountOnDeath;
             Destroy(gameObject);
-            GameManager.Instance.ChangeFood(Amount);
+            GameManager.Instance.UpdateHPBar(Amount);
         }
 
         return false;

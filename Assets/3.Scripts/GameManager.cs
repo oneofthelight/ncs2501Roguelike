@@ -20,14 +20,19 @@ public class GameManager : MonoBehaviour
     public UIDocument UIDoc;
     public GameObject AndroidPanel;
     public AudioSource audioSource;
+    public float maxHP = 100f;
+    public float currentHP = 100f;
     #endregion
 
     #region Private
     private const string GOS1 = "Game Over!\n\nYou traveled through" ;
     private const string GOS2 = "levels \n\n(Press Enter to New Game)";
-    private Label m_FoodLabel;
-    private int m_FoodAmount = 30;
+    //private Label m_FoodLabel;
+    //private int m_FoodAmount = 30;
     private int m_CurrentLevel = 0;
+    private Label m_HP_bar;
+    private VisualElement m_HP_bar;
+    private VisualElement hpFill;
     private VisualElement m_GameOverPanel;
     private Label m_GameOverMessage;
     #endregion
@@ -56,8 +61,9 @@ public class GameManager : MonoBehaviour
         TurnManager = new TurnManager();            // 턴 매니저 지정
         TurnManager.OnTick += OnTurnHappen;         // OnTick 메소드로 OnTurnHappen넣기
 
-        m_FoodLabel = UIDoc.rootVisualElement.Q<Label>("FoodLabel");
-        m_FoodLabel.text = "Food : " + m_FoodAmount;
+        hpFill = UIDoc.rootVisualElement.Q<Label>("hpFill");
+        //m_FoodLabel = UIDoc.rootVisualElement.Q<Label>("FoodLabel");
+        //m_FoodLabel.text = "Food : " + m_FoodAmount;
 
         m_GameOverPanel = UIDoc.rootVisualElement.Q<VisualElement>("GameOverPanel");  // 게임오버 패널 호출  
         m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");              // 게임오버 메시지 가져오기  
@@ -72,17 +78,11 @@ public class GameManager : MonoBehaviour
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
         m_CurrentLevel = 0;
-        m_FoodAmount = 100;
-        m_FoodLabel.text = "Food : " + m_FoodAmount;
+        m_HP_bar = hpFill;
+        //m_FoodAmount = 100;
+        //m_FoodLabel.text = "Food : " + m_FoodAmount;
 
         PlayerController.Init();
-        //BoardManager.Clean();
-        //BoardManager.Init();
-        //PlayerController.Spawn(BoardManager, new Vector2Int(1, 1));
-        if(m_CurrentLevel > 5 )
-        {
-            NextLevel();
-        } 
         NewLevel();
     }
     public void NewLevel()
@@ -95,17 +95,9 @@ public class GameManager : MonoBehaviour
     }
     void OnTurnHappen()             // 턴 소비
     {
-        ChangeFood(-1);
+        UpdateHPBar(-1);
     }
-    public void  NextLevel()
-    {
-        BoardManager2.Clean();
-        BoardManager2.Init();
-        PlayerController.Spawn(BoardManager2, new Vector2Int(1, 1));
-
-        m_CurrentLevel++;
-    }
-    public void ChangeFood(int amount)
+    /*public void ChangeFood(int amount)
     {
         m_FoodAmount += amount;
         if (m_FoodAmount <= 0)                          // 그냥 0이 아니라 작거나로 하는 이유는 혹시나하는 상황을 대비해서
@@ -116,6 +108,18 @@ public class GameManager : MonoBehaviour
             m_GameOverMessage.text = $"{GOS1} {m_CurrentLevel} {GOS2}";
         }
         m_FoodLabel.text = "Food : " + m_FoodAmount;
+    }*/
+    void OnEnable()
+    {
+        var root = GetComponent<UIDocument>().rootVisualElement;
+        hpFill = root.Q<VisualElement>("HPFill");
+        UpdateHPBar();
+    }
+
+    public void UpdateHPBar()
+    {
+        float hpPercent = currentHP / maxHP;
+        hpFill.style.width = new Length(hpPercent * 100, LengthUnit.Percent);
     }
     public void PlaySound(AudioClip clip)
     {
