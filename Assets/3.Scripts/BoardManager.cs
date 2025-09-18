@@ -14,18 +14,18 @@ public class BoardManager : MonoBehaviour
     public AudioClip collectedClip;
     public int Width;
     public int Height;
-    public Tile[] GroundTiles;
-    public Tile[] WallTiles;    // 테두리
-    public FoodObject[] FoodPrefab;
-    public WallObject[] WallPrefab; // 벽
-    public ExitCellObject ExitPrefab;
-    public EnemyObject[] EnemyPrefab;
     public int minFood;
     public int maxFood;
     public int minWall;
     public int maxWall;
     public int minEnemy;
     public int maxEnemy;
+    public Tile[] GroundTiles;
+    public Tile[] WallTiles;    // 테두리
+    public FoodObject[] FoodPrefab;
+    public WallObject[] WallPrefab; // 벽
+    public ExitCellObject ExitPrefab;
+    public EnemyObject[] EnemyPrefab;
 
     private Tilemap m_Tilemap;
     
@@ -48,6 +48,10 @@ public class BoardManager : MonoBehaviour
         // Calculate dimensions based on current level
         Width = 10 + (GameManager.Instance.CurrentLevel / 10) * 3;
         Height = 10 + (GameManager.Instance.CurrentLevel / 10) * 1;
+        minFood = 9 - (GameManager.Instance.CurrentLevel / 15) * 1; 
+        minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
+        minWall = 5 + (GameManager.Instance.CurrentLevel / 10) * 2;
+
 
         m_Tilemap = GetComponentInChildren<Tilemap>();
         // 이 내용은 셀데이터의 전체의 내용
