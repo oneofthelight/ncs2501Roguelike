@@ -4,12 +4,18 @@ using UnityEngine.Tilemaps;
 
 public class BoardManager : MonoBehaviour
 {
+    public class CellData
+    {
+        public bool Passable;
+        public CellObject ContainedObject;
+    }
+    private CellData[,] m_BoardData;
+
     public AudioClip collectedClip;
     public int Width;
-
     public int Height;
     public Tile[] GroundTiles;
-    public Tile[] WallTiles;  // 테두리
+    public Tile[] WallTiles;    // 테두리
     public FoodObject[] FoodPrefab;
     public WallObject[] WallPrefab; // 벽
     public ExitCellObject ExitPrefab;
@@ -21,38 +27,40 @@ public class BoardManager : MonoBehaviour
     public int minEnemy;
     public int maxEnemy;
 
+    private Tilemap m_Tilemap;
+    
+    private Grid m_Grid;
+    private List<Vector2Int> m_EmptyCellsList;
+
     public void SetCellTile(Vector2Int cellIndex, Tile tile)
     {
         m_Tilemap.SetTile(new Vector3Int(cellIndex.x, cellIndex.y, 0), tile);
     }
-    public class CellData
-    {
-        public bool Passable;
-        public CellObject ContainedObject;
-    }
+    
     //public PlayerController Player;
     public Tile GetCellTile(Vector2Int cellIndex)
     {
         return m_Tilemap.GetTile<Tile>(new Vector3Int(cellIndex.x, cellIndex.y, 0));
     }
 
-    private Tilemap m_Tilemap;
-    private CellData[,] m_BoardData;
-    private Grid m_Grid;
-    private List<Vector2Int> m_EmptyCellsList;
-   
     public void Init()
     {
+        // Calculate dimensions based on current level
+        Width = 10 + (GameManager.Instance.CurrentLevel / 10) * 3;
+        Height = 10 + (GameManager.Instance.CurrentLevel / 10) * 1;
+
         m_Tilemap = GetComponentInChildren<Tilemap>();
-        m_BoardData = new CellData[Width, Height];  // 이 내용은 셀데이터의 전체의 내용
-        m_Grid = GetComponent<Grid>();  
-        m_EmptyCellsList = new List<Vector2Int>(); 
+        // 이 내용은 셀데이터의 전체의 내용
+        m_BoardData = new CellData[Width, Height];  
+        m_Grid = GetComponent<Grid>();
+        m_EmptyCellsList = new List<Vector2Int>();
         for (int y = 0; y < Height; ++y)
         {
             for (int x = 0; x < Width; ++x)
             {
                 Tile tile;
-                m_BoardData[x, y] = new CellData();   // 위에서 만들었는데 이것을 또 쓴 이유 --> 셀데이터 각각의 내용
+                // 위에서 만들었는데 이것을 또 쓴 이유 --> 셀데이터 각각의 내용
+                m_BoardData[x, y] = new CellData();  
                 if (x == 0 || y == 0 || x == Width - 1 || y == Height - 1)
                 {
                     // Wall tile
@@ -76,13 +84,17 @@ public class BoardManager : MonoBehaviour
 
         // Exit
         Vector2Int endCoord = new Vector2Int(Width - 2, Height - 2);
-        AddObject(Instantiate(ExitPrefab), endCoord);
-        m_EmptyCellsList.Remove(endCoord);            // 이걸 빼는 이유는 음식이나 벽이 생성 되면 안되기 때문
+        if (m_EmptyCellsList.Contains(endCoord))
+        {
+            AddObject(Instantiate(ExitPrefab), endCoord);
+            m_EmptyCellsList.Remove(endCoord);
+        }
 
         GenerateWall();
         GenerateFood();
         GenerateEnemy();
     }
+
     public void Clean()
     {
         //no board data, so exit early, nothing to clean
@@ -107,7 +119,7 @@ public class BoardManager : MonoBehaviour
     {
         return m_Grid.GetCellCenterWorld((Vector3Int)cellIndex);
     }
-    
+
     public CellData GetCellData(Vector2Int cellIndex)
     {
         if (cellIndex.x < 0 || cellIndex.x >= Width
@@ -123,14 +135,14 @@ public class BoardManager : MonoBehaviour
         int foodCount = Random.Range(minFood, maxFood + 1);
         for (int i = 0; i < foodCount; ++i)
         {
-            //int randomY = Random.Range(1, Height - 1);  // 벽에는 생성되지 않아야 하므로 x,y 둘다 -1
+            if (m_EmptyCellsList.Count == 0) break;
             int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
             Vector2Int coord = m_EmptyCellsList[randomIndex];
 
-            m_EmptyCellsList.RemoveAt(randomIndex);  //RemoveAt에는 int index 값이 들어감
+            m_EmptyCellsList.RemoveAt(randomIndex);
             
-            int foodType = Random.Range(0, FoodPrefab.Length);  
-            FoodObject newFood = Instantiate(FoodPrefab[foodType]);  // FoodPreFab에 인덱스 값을 추가함(프리팝을 배열로 만듦)
+            int foodType = Random.Range(0, FoodPrefab.Length);
+            FoodObject newFood = Instantiate(FoodPrefab[foodType]);
             AddObject(newFood, coord);
         }
     }
@@ -139,13 +151,14 @@ public class BoardManager : MonoBehaviour
         int wallCount = Random.Range(minWall, maxWall + 1);
         for (int i = 0; i < wallCount; ++i)
         {
+            if (m_EmptyCellsList.Count == 0) break;
             int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
-            Vector2Int coord = m_EmptyCellsList[randomIndex];  // 랜덤으로 빈 셀 선택
+            Vector2Int coord = m_EmptyCellsList[randomIndex];
 
-            m_EmptyCellsList.RemoveAt(randomIndex);            // 벽 제거   
+            m_EmptyCellsList.RemoveAt(randomIndex);
 
             int wallType = Random.Range(0, WallPrefab.Length);
-            WallObject newWall = Instantiate(WallPrefab[wallType]);      // 벽 생성
+            WallObject newWall = Instantiate(WallPrefab[wallType]);
             AddObject(newWall, coord);
         }
     }
@@ -154,13 +167,14 @@ public class BoardManager : MonoBehaviour
         int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
         for (int i = 0; i < enemyCount; i++)
         {
+            if (m_EmptyCellsList.Count == 0) break;
             int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
-            Vector2Int coord = m_EmptyCellsList[randomIndex];  // 랜덤으로 빈 셀 선택
+            Vector2Int coord = m_EmptyCellsList[randomIndex];
 
-            m_EmptyCellsList.RemoveAt(randomIndex);            // 벽 제거   
+            m_EmptyCellsList.RemoveAt(randomIndex);
 
             int enemyType = Random.Range(0, EnemyPrefab.Length);
-            EnemyObject newEnemy = Instantiate(EnemyPrefab[enemyType]);      // 벽 생성
+            EnemyObject newEnemy = Instantiate(EnemyPrefab[enemyType]);
             AddObject(newEnemy, coord);
         }
     }
@@ -171,5 +185,4 @@ public class BoardManager : MonoBehaviour
         data.ContainedObject = obj;
         obj.Init(coord);
     }
-    
 }

@@ -7,7 +7,7 @@ public class EnemyObject : CellObject
 {
     public int Health = 3;
     public int Amount = 3;
-    public float healAmountOnDeath = 10f;
+    public int healAmountOnDeath = 10;
     private int m_CurrentHealth;
 
     private void Awake()
@@ -29,10 +29,10 @@ public class EnemyObject : CellObject
     public override bool PlayerWantsToEnter()
     {
         m_CurrentHealth -= 1;
-
+        Debug.Log(m_CurrentHealth);
         if (m_CurrentHealth <= 0)
         {
-            hpBar.m_CurrentHealth += healAmountOnDeath;
+            GameManager.Instance.UpdateHPBar((int)healAmountOnDeath);
             Destroy(gameObject);
             GameManager.Instance.UpdateHPBar(Amount);
         }
@@ -79,7 +79,7 @@ public class EnemyObject : CellObject
             || (yDist == 0 && absXDist == 1))
         {
             //we are adjacent to the player, attack!
-            GameManager.Instance.ChangeFood(-2);
+            GameManager.Instance.UpdateHPBar(-2);
         }
         else
         {
@@ -129,4 +129,3 @@ public class EnemyObject : CellObject
         return MoveTo(m_Cell + Vector2Int.down);
     }
 }
-

@@ -13,7 +13,7 @@ public class FoodObject : CellObject
         Destroy(gameObject);
 
         // 플레이어의 체력(food) 증가
-        GameManager.Instance.ChangeFood(AmountGranted);
+        GameManager.Instance.UpdateHPBar(AmountGranted);
 
         // 음향 효과 발생
         GameManager.Instance.PlaySound(clip);

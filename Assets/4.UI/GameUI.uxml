@@ -1,6 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement name="HP_bar" style="background-image: url(&apos;project://database/Assets/SimplePixelUI/artwork/halfcustomizible/rounded/bar_rounded_HCC_horizontal.png?fileID=2800000&amp;guid=e46cac61e2e0ffd4eacf4576c5d901ff&amp;type=3#bar_rounded_HCC_horizontal&apos;); width: 150px; height: 20px; -unity-background-image-tint-color: rgba(255, 0, 0, 255);" />
-    <ui:VisualElement name="GameOverPanel" style="justify-content: space-around; align-items: center; color: rgba(0, 0, 0, 0.78); position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+    <ui:VisualElement name="Background" style="background-image: url(&apos;project://database/Assets/SimplePixelUI/artwork/halfcustomizible/square/Slider/background.png?fileID=2800000&amp;guid=b5219f202af5bdd4e9fcb57fda99b78e&amp;type=3#background&apos;); width: 733px; height: 115px;">
+        <ui:VisualElement name="HP_bar" style="background-image: url(&apos;project://database/Assets/SimplePixelUI/artwork/halfcustomizible/rounded/bar_rounded_HCC_horizontal.png?fileID=2800000&amp;guid=e46cac61e2e0ffd4eacf4576c5d901ff&amp;type=3#bar_rounded_HCC_horizontal&apos;); width: 734px; height: 112px; -unity-background-image-tint-color: rgb(255, 0, 0);">
+            <ui:Label text="100/100" display-tooltip-when-elided="true" name="HP_Text" style="height: 92px; width: 732px; -unity-text-align: middle-center; -unity-font-style: bold; font-size: 73px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="GameOverPanel" focusable="false" style="justify-content: space-around; align-items: center; color: rgba(0, 0, 0, 0.78); position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; visibility: hidden;">
         <ui:Label text="Game Over" display-tooltip-when-elided="true" name="GameOverMessage" style="align-items: center; justify-content: space-between; font-size: 20px; -unity-font-definition: url(&apos;project://database/Assets/Roguelike2D/TutorialAssets/Fonts/PressStart2P-Regular%20SDF.asset?fileID=11400000&amp;guid=88fc0456c92f4ba45a42a81be28feda5&amp;type=2#PressStart2P-Regular SDF&apos;); color: rgb(212, 8, 0); -unity-text-align: upper-center;" />
     </ui:VisualElement>
+    <ui:Label text="Stage [1]" display-tooltip-when-elided="true" name="StageTxt" style="height: 85px; width: 1926px; right: auto; position: absolute; left: 0; align-items: stretch; -unity-text-align: middle-center; font-size: 60px; top: 12px;" />
 </ui:UXML>
