@@ -75,8 +75,9 @@ public class EnemyObject : CellObject
         int absXDist = Mathf.Abs(xDist);
         int absYDist = Mathf.Abs(yDist);
 
-        if ((xDist == 0 && absYDist == 1)
-            || (yDist == 0 && absXDist == 1))
+         Debug.Log($"몬스터 플레이어와 거리 x:{absXDist}. y:{absYDist}");
+        //if ((xDist == 0 && absYDist == 1) || (yDist == 0 && absXDist == 1))
+        if ((absXDist == 0 && absYDist == 1) || (absYDist == 0 && absXDist == 1))
         {
             //we are adjacent to the player, attack!
             GameManager.Instance.UpdateHPBar(-2);

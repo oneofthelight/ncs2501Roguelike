@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
     public float currentHP = 100f;
     public float maxTextHP = 100f;
     public float currentTextHP = 100f;
+    //public HighScoreManager highScoreManager;
     #endregion
 
     #region Private
@@ -80,6 +81,9 @@ public class GameManager : MonoBehaviour
         hp_Text = hpFill.Q<Label>("HP_Text");
         stageLabel = root.Q<Label>("StageTxt");  // 게임오버 패널 호출
 
+        // Load high scores using the new manager
+        // highScoreManager.LoadHighScores();
+
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
         StartNewGame();                          // 새 게임 불러오기
@@ -121,7 +125,7 @@ public class GameManager : MonoBehaviour
 
     void OnTurnHappen()            // 턴 소비
     {
-        UpdateHPBar(-1); // Decrease HP by 1 on each turn
+        //UpdateHPBar(-1); // Decrease HP by 1 on each turn
     }
 
     void OnEnable()

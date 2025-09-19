@@ -168,7 +168,8 @@ public class BoardManager : MonoBehaviour
     }
     void GenerateEnemy()
     {
-        int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
+        //int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
+        int enemyCount = 1;
         for (int i = 0; i < enemyCount; i++)
         {
             if (m_EmptyCellsList.Count == 0) break;

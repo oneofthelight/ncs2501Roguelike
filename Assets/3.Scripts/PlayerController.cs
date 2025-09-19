@@ -127,11 +127,11 @@ public class PlayerController : MonoBehaviour
         {
             // 셀이 움직일 수 있으면 움직여라
             BoardManager.CellData cellData = m_Board.GetCellData(newCellTarget);
-
+            GameManager.Instance.TurnManager.Tick();
             if (cellData != null && cellData.Passable)
             {
+                
                 //m_CellPosition = newCellTarget;
-                GameManager.Instance.TurnManager.Tick();
                 if (cellData.ContainedObject == null)  // 들어가려고 할때
                 {
                     MoveTo(newCellTarget);
@@ -141,15 +141,18 @@ public class PlayerController : MonoBehaviour
                 {
                     if (cellData.ContainedObject.PlayerWantsToEnter())
                     {
-                        MoveTo(newCellTarget);  //여기 코드와
-                                                // 플레이어를 먼저 셀로 이동 시킨 후 호출
+                        //GameManager.Instance.UpdateHPBar(-2);
+                        MoveTo(newCellTarget);  // 플레이어를 먼저 셀로 이동 시킨 후 호출
+
                     }
                     else 
                     {
+                        //GameManager.Instance.UpdateHPBar();
                         m_Animator.SetTrigger(hashAttack);
                     }
                 }
             }
+            
         }
     }
     public void MoveSkip()
