@@ -127,7 +127,6 @@ public class PlayerController : MonoBehaviour
         {
             // 셀이 움직일 수 있으면 움직여라
             BoardManager.CellData cellData = m_Board.GetCellData(newCellTarget);
-            GameManager.Instance.TurnManager.Tick();
             if (cellData != null && cellData.Passable)
             {
                 
@@ -151,6 +150,7 @@ public class PlayerController : MonoBehaviour
                         m_Animator.SetTrigger(hashAttack);
                     }
                 }
+            GameManager.Instance.TurnManager.Tick();
             }
             
         }

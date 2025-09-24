@@ -52,6 +52,11 @@ public class EnemyObject : CellObject
             return false;
         }
 
+        if (targetCell.ContainedObject != null && !(targetCell.ContainedObject is FoodObject))
+        {
+            return false;
+        }
+
         // 현재 셀에서 적 제거
         var currentCell = board.GetCellData(m_Cell);
         currentCell.ContainedObject = null;
@@ -75,7 +80,7 @@ public class EnemyObject : CellObject
         int absXDist = Mathf.Abs(xDist);
         int absYDist = Mathf.Abs(yDist);
 
-         Debug.Log($"몬스터 플레이어와 거리 x:{absXDist}. y:{absYDist}");
+        Debug.Log($"몬스터 플레이어와 거리 x:{absXDist}. y:{absYDist}");
         //if ((xDist == 0 && absYDist == 1) || (yDist == 0 && absXDist == 1))
         if ((absXDist == 0 && absYDist == 1) || (absYDist == 0 && absXDist == 1))
         {

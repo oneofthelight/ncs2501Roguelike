@@ -118,7 +118,7 @@ public class GameManager : MonoBehaviour
     {
         // Clean the previous board and initialize a new one with the correct level
         BoardManager.Clean();
-        //CurrentLevel++;
+        CurrentLevel++;
         BoardManager.Init();
         PlayerController.Spawn(BoardManager, new Vector2Int(1, 1));
     }

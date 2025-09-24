@@ -64,7 +64,7 @@ public class BoardManager : MonoBehaviour
             {
                 Tile tile;
                 // 위에서 만들었는데 이것을 또 쓴 이유 --> 셀데이터 각각의 내용
-                m_BoardData[x, y] = new CellData();  
+                m_BoardData[x, y] = new CellData(); 
                 if (x == 0 || y == 0 || x == Width - 1 || y == Height - 1)
                 {
                     // Wall tile
@@ -183,7 +183,7 @@ public class BoardManager : MonoBehaviour
             AddObject(newEnemy, coord);
         }
     }
-    void AddObject(CellObject obj, Vector2Int coord)
+    public void AddObject(CellObject obj, Vector2Int coord)
     {
         CellData data = m_BoardData[coord.x, coord.y];
         obj.transform.position = CellToWorld(coord);
