@@ -66,6 +66,11 @@ public class EnemyObject : CellObject
         m_Cell = coord;
         transform.position = board.CellToWorld(coord);
 
+        if (targetCell == currentCell)
+        {
+            GameManager.Instance.UpdateHPBar(-2);
+        }
+
         return true;
     }
 
@@ -80,7 +85,7 @@ public class EnemyObject : CellObject
         int absXDist = Mathf.Abs(xDist);
         int absYDist = Mathf.Abs(yDist);
 
-        Debug.Log($"몬스터 플레이어와 거리 x:{absXDist}. y:{absYDist}");
+        Debug.Log($"몬스터 플레이어와 거리 x:{xDist}. y:{yDist}");
         //if ((xDist == 0 && absYDist == 1) || (yDist == 0 && absXDist == 1))
         if ((absXDist == 0 && absYDist == 1) || (absYDist == 0 && absXDist == 1))
         {

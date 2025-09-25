@@ -499,7 +499,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 3
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -523,7 +523,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.26, y: 2.54, z: -10}
+  m_LocalPosition: {x: 5.722955, y: 3.3775816, z: -20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1027,8 +1027,6 @@ MonoBehaviour:
   collectedClip: {fileID: 8300000, guid: 2d75080d0851d4613ada1117d91ee417, type: 3}
   Width: 12
   Height: 12
-  minFood: 4
-  maxFood: 6
   minWall: 1
   maxWall: 4
   minEnemy: 1
