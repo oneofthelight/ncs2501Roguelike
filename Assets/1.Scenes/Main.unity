@@ -499,7 +499,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -523,7 +523,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.722955, y: 3.3775816, z: -20}
+  m_LocalPosition: {x: 4.26, y: 2.54, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -754,6 +754,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1261.384, y: 795.36}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &858072256
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 858072258}
+  - component: {fileID: 858072257}
+  m_Layer: 0
+  m_Name: RecordsManeger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &858072257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 858072256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dfc416a0ae76e540b640fe2e82de479, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &858072258
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 858072256}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 20.798609, y: 8.890032, z: 0.17854954}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1301579033
 GameObject:
   m_ObjectHideFlags: 0
@@ -1027,6 +1071,8 @@ MonoBehaviour:
   collectedClip: {fileID: 8300000, guid: 2d75080d0851d4613ada1117d91ee417, type: 3}
   Width: 12
   Height: 12
+  minFood: 0
+  maxFood: 0
   minWall: 1
   maxWall: 4
   minEnemy: 1
@@ -1095,6 +1141,7 @@ MonoBehaviour:
   currentHP: 100
   maxTextHP: 100
   currentTextHP: 100
+  RecordsManager: {fileID: 858072257}
 --- !u!4 &1565614326
 Transform:
   m_ObjectHideFlags: 0
@@ -1219,6 +1266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UIDoc: {fileID: 0}
+  m_HighScores: 
 --- !u!1 &1759000422
 GameObject:
   m_ObjectHideFlags: 3

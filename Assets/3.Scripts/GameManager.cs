@@ -19,11 +19,12 @@ public class GameManager : MonoBehaviour
     public UIDocument UIDoc;
     public GameObject AndroidPanel;
     public AudioSource audioSource;
-    public float maxHP = 100f;
+    public float maxHP = 100;
     public float currentHP = 100f;
     public float maxTextHP = 100f;
     public float currentTextHP = 100f;
-    //public HighScoreManager highScoreManager;
+    public RecordsManager RecordsManager;
+
     #endregion
 
     #region Private
@@ -34,9 +35,14 @@ public class GameManager : MonoBehaviour
     private Label hp_Text;
     private Label m_GameOverMessage;
     private Label stageLabel;
+    private TextField m_RecordNameInput;
+    private Button m_SaveRecordButton;
+
     #endregion
 
     private int m_CurrentLevel = 0;
+    private string placeholderName;
+
     public int CurrentLevel 
     {
         get { return m_CurrentLevel; }
@@ -80,9 +86,9 @@ public class GameManager : MonoBehaviour
         m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");     // 게임오버 메시지 가져오기
         hp_Text = hpFill.Q<Label>("HP_Text");
         stageLabel = root.Q<Label>("StageTxt");  // 게임오버 패널 호출
-
-        // Load high scores using the new manager
-        // highScoreManager.LoadHighScores();
+                                                 
+        m_RecordNameInput = m_GameOverPanel.Q<TextField>("NameInput"); // UXML에서 NameInput이라는 이름으로 TextField를 만들어주세요.
+        m_SaveRecordButton = m_GameOverPanel.Q<Button>("SaveRecordBtn"); // UXML에서 SaveRecordBtn이라는 이름으로 Button을 만들어주세요.
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
@@ -110,7 +116,8 @@ public class GameManager : MonoBehaviour
         CurrentLevel = 0;
         currentHP = maxHP; // Reset HP for a new game
         UpdateHPBar();
-        PlayerController.Init();
+        // 🚨 [핵심] 새 게임 시작 시 조작 가능하도록 Init()을 호출합니다.
+        PlayerController.Init(); // 이 안에서 m_IsGameOver가 false로 재설정됩니다.
         NewLevel();
     }
 
@@ -125,12 +132,12 @@ public class GameManager : MonoBehaviour
 
     void OnTurnHappen()            // 턴 소비
     {
-        //UpdateHPBar(-1); // Decrease HP by 1 on each turn
+        UpdateHPBar(-1); // Decrease HP by 1 on each turn
     }
 
     void OnEnable()
     {
-        // This is not needed anymore as the UI elements are found in Start()
+        
     }
 
     public void UpdateHPBar(int amount = 0)
@@ -147,7 +154,21 @@ public class GameManager : MonoBehaviour
         // 
         if (currentHP <= 0)
         {
-            // Game Over logic
+            // 🚨 핵심: 이 부분이 호출되어야 합니다!
+            if (PlayerController != null) 
+            {
+                PlayerController.GameOver(); // PlayerController의 m_IsGameOver를 true로 만듭니다.
+            }
+            // 1. RecordsManager가 있으면 현재 레벨을 기록으로 저장
+            //string placeholderName = "Player"; // 나중에 UI 입력 필드 값으로 대체
+        
+            if (RecordsManager != null)
+            {
+                // RecordsManager에 레벨과 함께 이름을 전달하여 저장
+                RecordsManager.AddNewRecord(CurrentLevel, placeholderName); 
+            }
+
+            // 2. 게임 오버 UI 표시
             m_GameOverPanel.style.visibility = Visibility.Visible;
             m_GameOverMessage.text = GOS1 + CurrentLevel + GOS2;
         }

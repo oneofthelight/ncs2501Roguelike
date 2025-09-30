@@ -14,8 +14,8 @@ public class BoardManager : MonoBehaviour
     public AudioClip collectedClip;
     public int Width;
     public int Height;
-    //public int minFood;
-    //public int maxFood;
+    public int minFood;
+    public int maxFood;
     public int minWall;
     public int maxWall;
     public int minEnemy;
@@ -48,8 +48,8 @@ public class BoardManager : MonoBehaviour
         // Calculate dimensions based on current level
         Width = 10 + (GameManager.Instance.CurrentLevel / 10) * 3;
         Height = 10 + (GameManager.Instance.CurrentLevel / 10) * 1;
-        //minFood = 9 - (GameManager.Instance.CurrentLevel / 15) * 1; 
-        //minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
+        minFood = 10 - (GameManager.Instance.CurrentLevel / 15) * 1; 
+        minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
         minWall = 5 + (GameManager.Instance.CurrentLevel / 10) * 2;
 
 
@@ -94,8 +94,11 @@ public class BoardManager : MonoBehaviour
             m_EmptyCellsList.Remove(endCoord);
         }
 
+        if (GameManager.Instance.CurrentLevel >= 30)
+        {
+            GenerateFood();
+        }
         GenerateWall();
-        //GenerateFood();
         GenerateEnemy();
     }
 
@@ -134,7 +137,7 @@ public class BoardManager : MonoBehaviour
 
         return m_BoardData[cellIndex.x, cellIndex.y];
     }
-    /*
+    
     private void GenerateFood()
     {
         int foodCount = Random.Range(minFood, maxFood + 1);
@@ -151,7 +154,6 @@ public class BoardManager : MonoBehaviour
             AddObject(newFood, coord);
         }
     }
-    */
     void GenerateWall()
     {
         int wallCount = Random.Range(minWall, maxWall + 1);
@@ -170,8 +172,7 @@ public class BoardManager : MonoBehaviour
     }
     void GenerateEnemy()
     {
-        //int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
-        int enemyCount = 1;
+        int enemyCount = Random.Range(minEnemy, maxEnemy + 1);
         for (int i = 0; i < enemyCount; i++)
         {
             if (m_EmptyCellsList.Count == 0) break;
