@@ -48,7 +48,7 @@ public class BoardManager : MonoBehaviour
         // Calculate dimensions based on current level
         Width = 10 + (GameManager.Instance.CurrentLevel / 10) * 3;
         Height = 10 + (GameManager.Instance.CurrentLevel / 10) * 1;
-        minFood = 10 - (GameManager.Instance.CurrentLevel / 15) * 1; 
+        minFood = 4 + (GameManager.Instance.CurrentLevel / 10) * 1; 
         minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
         minWall = 5 + (GameManager.Instance.CurrentLevel / 10) * 2;
 
@@ -94,7 +94,7 @@ public class BoardManager : MonoBehaviour
             m_EmptyCellsList.Remove(endCoord);
         }
 
-        if (GameManager.Instance.CurrentLevel >= 30)
+        if (GameManager.Instance.CurrentLevel >= 10)
         {
             GenerateFood();
         }

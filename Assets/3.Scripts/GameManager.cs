@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
         set
         {
             m_CurrentLevel = value;
-            stageLabel.text = $"Stage [{m_CurrentLevel + 1}]";
+            stageLabel.text = $"Stage [{m_CurrentLevel}]";
         }
     
     }

@@ -9,7 +9,7 @@ public class TurnManager
 
     public TurnManager()
     {
-        m_TurnCount = 1;
+        m_TurnCount = 0;
     }
 
     public void Tick()
