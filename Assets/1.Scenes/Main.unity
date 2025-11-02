@@ -1077,6 +1077,7 @@ MonoBehaviour:
   maxWall: 4
   minEnemy: 1
   maxEnemy: 3
+  Elitenemy: 2
   GroundTiles:
   - {fileID: 11400000, guid: 5aeac4d41378016419cd159d736e3910, type: 2}
   - {fileID: 11400000, guid: 2bd78de98b18dbe419945ae4258932ac, type: 2}
@@ -1101,6 +1102,8 @@ MonoBehaviour:
   ExitPrefab: {fileID: 6393800969445973906, guid: 0fcfcb3e47d2b674380314c7534c5996, type: 3}
   EnemyPrefab:
   - {fileID: 7754693994964896569, guid: 48998cf891fa5ca45a7f6dff0f7da3a3, type: 3}
+  ElitenemyPrefab:
+  - {fileID: 2540142403897391866, guid: 3bd886e1d4ca9f9458d1baab2a0adabc, type: 3}
 --- !u!1 &1565614324
 GameObject:
   m_ObjectHideFlags: 0
@@ -1141,7 +1144,6 @@ MonoBehaviour:
   currentHP: 100
   maxTextHP: 100
   currentTextHP: 100
-  RecordsManager: {fileID: 858072257}
 --- !u!4 &1565614326
 Transform:
   m_ObjectHideFlags: 0
@@ -1265,8 +1267,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e411a5c89893674d9f76706940b4969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UIDoc: {fileID: 0}
-  m_HighScores: 
 --- !u!1 &1759000422
 GameObject:
   m_ObjectHideFlags: 3

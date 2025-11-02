@@ -5,9 +5,7 @@
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="GameOverPanel" focusable="false" picking-mode="Ignore" style="justify-content: space-around; align-items: center; color: rgba(0, 0, 0, 0.78); position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; visibility: hidden;">
-        <ui:Button text="Save" display-tooltip-when-elided="true" name="SaveRecordBtn" style="height: 115px; width: 227px;" />
         <ui:Label text="Game Over" display-tooltip-when-elided="true" name="GameOverMessage" style="align-items: center; justify-content: space-between; font-size: 20px; -unity-font-definition: url(&apos;project://database/Assets/Roguelike2D/TutorialAssets/Fonts/PressStart2P-Regular%20SDF.asset?fileID=11400000&amp;guid=88fc0456c92f4ba45a42a81be28feda5&amp;type=2#PressStart2P-Regular SDF&apos;); color: rgb(212, 8, 0); -unity-text-align: upper-center;" />
-        <ui:TextField picking-mode="Ignore" label="Text Field" value="filler text" is-delayed="true" max-length="0" name="NameInput" style="height: 162px; width: 717px; align-items: stretch; flex-direction: row-reverse; justify-content: flex-end;" />
     </ui:VisualElement>
     <ui:Label text="Stage [1]" display-tooltip-when-elided="true" name="StageTxt" style="height: 85px; width: 1926px; right: auto; position: absolute; left: 0; align-items: stretch; -unity-text-align: middle-center; font-size: 60px; top: 12px;" />
 </ui:UXML>

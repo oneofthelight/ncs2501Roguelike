@@ -20,15 +20,17 @@ public class BoardManager : MonoBehaviour
     public int maxWall;
     public int minEnemy;
     public int maxEnemy;
+    public int Elitenemy; // 레벨에 따라 계산된 엘리트 적 개수 (Init에서 계산)
     public Tile[] GroundTiles;
     public Tile[] WallTiles;    // 테두리
     public FoodObject[] FoodPrefab;
     public WallObject[] WallPrefab; // 벽
     public ExitCellObject ExitPrefab;
     public EnemyObject[] EnemyPrefab;
+    public EnemyObject1[] ElitenemyPrefab;
 
     private Tilemap m_Tilemap;
-    
+
     private Grid m_Grid;
     private List<Vector2Int> m_EmptyCellsList;
 
@@ -36,7 +38,7 @@ public class BoardManager : MonoBehaviour
     {
         m_Tilemap.SetTile(new Vector3Int(cellIndex.x, cellIndex.y, 0), tile);
     }
-    
+
     //public PlayerController Player;
     public Tile GetCellTile(Vector2Int cellIndex)
     {
@@ -48,14 +50,17 @@ public class BoardManager : MonoBehaviour
         // Calculate dimensions based on current level
         Width = 10 + (GameManager.Instance.CurrentLevel / 10) * 3;
         Height = 10 + (GameManager.Instance.CurrentLevel / 10) * 1;
-        minFood = 4 + (GameManager.Instance.CurrentLevel / 10) * 1; 
+        minFood = 4 + (GameManager.Instance.CurrentLevel / 10) * 1;
         minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
         minWall = 5 + (GameManager.Instance.CurrentLevel / 10) * 2;
+
+        // 레벨에 따라 엘리트 적 개수 계산
+        Elitenemy = 1 + (GameManager.Instance.CurrentLevel / 20);
 
 
         m_Tilemap = GetComponentInChildren<Tilemap>();
         // 이 내용은 셀데이터의 전체의 내용
-        m_BoardData = new CellData[Width, Height];  
+        m_BoardData = new CellData[Width, Height];
         m_Grid = GetComponent<Grid>();
         m_EmptyCellsList = new List<Vector2Int>();
         for (int y = 0; y < Height; ++y)
@@ -64,7 +69,7 @@ public class BoardManager : MonoBehaviour
             {
                 Tile tile;
                 // 위에서 만들었는데 이것을 또 쓴 이유 --> 셀데이터 각각의 내용
-                m_BoardData[x, y] = new CellData(); 
+                m_BoardData[x, y] = new CellData();
                 if (x == 0 || y == 0 || x == Width - 1 || y == Height - 1)
                 {
                     // Wall tile
@@ -94,12 +99,21 @@ public class BoardManager : MonoBehaviour
             m_EmptyCellsList.Remove(endCoord);
         }
 
+        // --- 객체 생성 순서 변경 ---
+        // 1. 엘리트 적 먼저 생성: 중요한 개체이므로 빈 공간이 확실할 때 먼저 배치합니다.
+
+        if (GameManager.Instance.CurrentLevel >= 20)
+        {
+            GenerateElitenemy();
+        }
+        // 2. 일반 오브젝트 생성
         if (GameManager.Instance.CurrentLevel >= 10)
         {
             GenerateFood();
         }
         GenerateWall();
         GenerateEnemy();
+        // ------------------------
     }
 
     public void Clean()
@@ -137,7 +151,7 @@ public class BoardManager : MonoBehaviour
 
         return m_BoardData[cellIndex.x, cellIndex.y];
     }
-    
+
     private void GenerateFood()
     {
         int foodCount = Random.Range(minFood, maxFood + 1);
@@ -148,7 +162,7 @@ public class BoardManager : MonoBehaviour
             Vector2Int coord = m_EmptyCellsList[randomIndex];
 
             m_EmptyCellsList.RemoveAt(randomIndex);
-            
+
             int foodType = Random.Range(0, FoodPrefab.Length);
             FoodObject newFood = Instantiate(FoodPrefab[foodType]);
             AddObject(newFood, coord);
@@ -192,5 +206,25 @@ public class BoardManager : MonoBehaviour
         obj.transform.position = CellToWorld(coord);
         data.ContainedObject = obj;
         obj.Init(coord);
+    }
+    void GenerateElitenemy()
+    {
+        // 1. Init()에서 계산된 Elitenemy 변수를 사용하여 개수를 설정
+        int ElitenemyCount = Elitenemy;
+
+        for (int i = 0; i < ElitenemyCount; i++)
+        {
+            if (m_EmptyCellsList.Count == 0 || ElitenemyPrefab.Length == 0) break;
+
+            int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
+            Vector2Int coord = m_EmptyCellsList[randomIndex];
+
+            m_EmptyCellsList.RemoveAt(randomIndex);
+
+            int enemyType = Random.Range(0, ElitenemyPrefab.Length);
+            // 2. Instantiate 된 오브젝트를 AddObject에 전달
+            EnemyObject1 newElitenemy = Instantiate(ElitenemyPrefab[enemyType]);
+            AddObject(newElitenemy, coord);
+        }
     }
 }

@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     public float currentHP = 100f;
     public float maxTextHP = 100f;
     public float currentTextHP = 100f;
-    public RecordsManager RecordsManager;
+    //public RecordsManager RecordsManager;
 
     #endregion
 
@@ -35,8 +35,8 @@ public class GameManager : MonoBehaviour
     private Label hp_Text;
     private Label m_GameOverMessage;
     private Label stageLabel;
-    private TextField m_RecordNameInput;
-    private Button m_SaveRecordButton;
+    //private TextField m_RecordNameInput;
+    //private Button m_SaveRecordButton;
 
     #endregion
 
@@ -87,8 +87,8 @@ public class GameManager : MonoBehaviour
         hp_Text = hpFill.Q<Label>("HP_Text");
         stageLabel = root.Q<Label>("StageTxt");  // 게임오버 패널 호출
                                                  
-        m_RecordNameInput = m_GameOverPanel.Q<TextField>("NameInput"); // UXML에서 NameInput이라는 이름으로 TextField를 만들어주세요.
-        m_SaveRecordButton = m_GameOverPanel.Q<Button>("SaveRecordBtn"); // UXML에서 SaveRecordBtn이라는 이름으로 Button을 만들어주세요.
+        //m_RecordNameInput = m_GameOverPanel.Q<TextField>("NameInput"); // UXML에서 NameInput이라는 이름으로 TextField를 만들어주세요.
+        //m_SaveRecordButton = m_GameOverPanel.Q<Button>("SaveRecordBtn"); // UXML에서 SaveRecordBtn이라는 이름으로 Button을 만들어주세요.
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
@@ -162,12 +162,12 @@ public class GameManager : MonoBehaviour
             // 1. RecordsManager가 있으면 현재 레벨을 기록으로 저장
             //string placeholderName = "Player"; // 나중에 UI 입력 필드 값으로 대체
         
-            if (RecordsManager != null)
+            /*if (RecordsManager != null)
             {
                 // RecordsManager에 레벨과 함께 이름을 전달하여 저장
                 RecordsManager.AddNewRecord(CurrentLevel, placeholderName); 
             }
-
+            */
             // 2. 게임 오버 UI 표시
             m_GameOverPanel.style.visibility = Visibility.Visible;
             m_GameOverMessage.text = GOS1 + CurrentLevel + GOS2;
