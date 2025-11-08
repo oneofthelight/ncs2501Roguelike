@@ -98,9 +98,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01b641e1c753deb48926f7373a1ec28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Health: 3
-  Amount: 3
-  healAmountOnDeath: 10
+  Health: 2
+  Amount: 2
+  healAmountOnDeath: 20
 --- !u!95 &475332193002955466
 Animator:
   serializedVersion: 5
@@ -111,7 +111,7 @@ Animator:
   m_GameObject: {fileID: 8138146081963919933}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: ae25d37cdef571042ab95a5c93f95d62, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

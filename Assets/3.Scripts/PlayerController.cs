@@ -6,54 +6,57 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    public int HP { get; set; } // 또는 public int HP;
     AudioSource audioSource;
+    public bool IsGameOver => m_IsGameOver;
     public AudioClip Attack;
     public float MoveSpeed = 5.0f;
-    public Vector2Int Cell 
+
+    public Vector2Int Cell
     {
-        get
-        {
-            return m_CellPosition;
-        }
-        private set{}
+        get { return m_CellPosition; }
+        private set { m_CellPosition = value; }
     }
     private readonly int hashMoving = Animator.StringToHash("Moving");
     private readonly int hashAttack = Animator.StringToHash("Attack");
     private BoardManager m_Board;
-    private Vector2Int m_CellPosition; 
-    
-    // [기존 변수 유지] 게임 오버 상태를 추적합니다.
-    private bool m_IsGameOver; 
-    
+    private Vector2Int m_CellPosition;
+
+    private bool m_IsGameOver;
     private bool m_IsMoving;
     private Vector3 m_MoveTarget;
     private Animator m_Animator;
-    private Vector2Int newCellTarget;
-    private bool hasMoved;
+
     private void Awake()
     {
         m_Animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
     }
+
     public void Init()
     {
         m_IsMoving = false;
-        
-        // [수정] 새 게임 시작 시 조작 가능하도록 m_IsGameOver를 false로 초기화합니다.
-        m_IsGameOver = false; 
+        m_IsGameOver = false;
+        m_Animator.SetBool(hashMoving, false);
     }
-    
-    // [기존 함수 유지] GameManager에서 호출하여 조작을 중지시킬 때 사용합니다.
+
     public void GameOver()
     {
         m_IsGameOver = true;
     }
+
     public void Spawn(BoardManager boardManager, Vector2Int cell)
     {
         m_Board = boardManager;
         m_CellPosition = cell;
-        // 보드 에서의 player위치 지정 => 화면에서 제대로된 위치에 표시
+
+        // 🚨 [필수] 맵 로드 시 이동 상태 완전 초기화
+        m_IsMoving = false;
+
         MoveTo(cell, true);
     }
+
     public void MoveTo(Vector2Int cell, bool immediate = false)
     {
         m_CellPosition = cell;
@@ -68,27 +71,22 @@ public class PlayerController : MonoBehaviour
             m_IsMoving = true;
             m_MoveTarget = m_Board.CellToWorld(m_CellPosition);
         }
-        
+
         m_Animator.SetBool(hashMoving, m_IsMoving);
     }
-    void Start()
-    {
-        // StartNewGame에서 Init()이 호출되므로 별도 처리 필요 없음
-    }
 
-    private void Update()
+    public void Update()
     {
-        // [핵심] 게임 오버 상태에서는 'Enter' 입력 외의 모든 조작을 무시하고 리턴합니다.
-        if (m_IsGameOver) 
+        if (m_IsGameOver)
         {
             if (Keyboard.current.enterKey.wasPressedThisFrame)
             {
                 GameManager.Instance.StartNewGame();
             }
-            return; // 조작 중지!
+            return;
         }
-        
-        // ... (기존 움직임 로직: m_IsMoving) ...
+
+        // 1. 이동 중일 경우, 이동 완료 여부만 체크
         if (m_IsMoving)
         {
             transform.position = Vector3.MoveTowards(transform.position, m_MoveTarget, MoveSpeed * Time.deltaTime);
@@ -97,106 +95,79 @@ public class PlayerController : MonoBehaviour
             {
                 m_IsMoving = false;
                 m_Animator.SetBool(hashMoving, false);
+
                 var cellData = m_Board.GetCellData(m_CellPosition);
-                if (cellData.ContainedObject != null)
+
+                // 이동 완료 후, 셀 오브젝트 상호작용 (Exit/Treasure 로직)
+                if (cellData != null && cellData.ContainedObject != null)
+                {
                     cellData.ContainedObject.PlayerEntered();
+                }
+
+                // 이동 완료 후 턴 넘김 (Exit에서 NewLevel이 호출될 수 있으므로 마지막에 처리)
+                if (!GameManager.Instance.IsLoading) // NewLevel 로딩 중이 아닐 때만 턴 넘김
+                {
+                    GameManager.Instance.TurnManager.Tick();
+                }
             }
             return;
         }
-        
-        // ... (기존 입력 처리 로직) ...
-        newCellTarget = m_CellPosition;
-        hasMoved = false;
-        
-        if (Keyboard.current.upArrowKey.wasPressedThisFrame)
+
+        // 2. 입력 처리 (이동 중이 아닐 때만 입력을 받습니다)
+        Vector2Int inputDirection = Vector2Int.zero;
+
+        if (Keyboard.current.upArrowKey.wasPressedThisFrame) inputDirection = Vector2Int.up;
+        else if (Keyboard.current.downArrowKey.wasPressedThisFrame) inputDirection = Vector2Int.down;
+        else if (Keyboard.current.rightArrowKey.wasPressedThisFrame) inputDirection = Vector2Int.right;
+        else if (Keyboard.current.leftArrowKey.wasPressedThisFrame) inputDirection = Vector2Int.left;
+
+        if (inputDirection != Vector2Int.zero)
         {
-            MoveUp();
+            TryMove(inputDirection);
         }
-        else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
-        {
-            MoveDown();
-        }
-        else if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
-        {
-            MoveRight();
-        }
-        else if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
-        {
-            MoveLeft();
-        }
-    }    
-    private void UpdatePlayer()
+    }
+
+    private void TryMove(Vector2Int direction)
     {
-        if (hasMoved)
+        Vector2Int targetCell = m_CellPosition + direction;
+        BoardManager.CellData cellData = m_Board.GetCellData(targetCell);
+
+        if (cellData == null || !cellData.Passable)
         {
-            // ... (기존 UpdatePlayer 로직) ...
+            // 벽에 부딪힘
+            m_Animator.SetTrigger(hashAttack);
             GameManager.Instance.TurnManager.Tick();
-            BoardManager.CellData cellData = m_Board.GetCellData(newCellTarget);
-            if (cellData != null && cellData.Passable)
+            return;
+        }
+
+        if (cellData.ContainedObject == null) // 비어있는 셀
+        {
+            MoveTo(targetCell);
+        }
+        else // 오브젝트가 있는 셀
+        {
+            // PlayerWantsToEnter()를 호출하여 이동/공격 여부를 결정
+            if (cellData.ContainedObject.PlayerWantsToEnter())
             {
-                if (cellData.ContainedObject == null)  // 들어가려고 할때
-                {
-                    MoveTo(newCellTarget);
-                }
-                else
-                {
-                    if (cellData.ContainedObject.PlayerWantsToEnter())
-                    {
-                        MoveTo(newCellTarget);  // 플레이어를 먼저 셀로 이동 시킨 후 호출
-                    }
-                    else 
-                    {
-                        m_Animator.SetTrigger(hashAttack);
-                    }
-                }
+                MoveTo(targetCell); // 이동을 허용하면 이동
+            }
+            else
+            {
+                // 이동을 허용하지 않으면 공격 애니메이션
+                m_Animator.SetTrigger(hashAttack);
+                GameManager.Instance.TurnManager.Tick();
             }
         }
     }
-    
-    // [핵심] MoveSkip에서도 m_IsGameOver를 확인합니다.
+
+    // 외부 호출을 위한 편의 함수 (TryMove 통합)
+    public void MoveUp() { TryMove(Vector2Int.up); }
+    public void MoveDown() { TryMove(Vector2Int.down); }
+    public void MoveRight() { TryMove(Vector2Int.right); }
+    public void MoveLeft() { TryMove(Vector2Int.left); }
     public void MoveSkip()
     {
-        // 🚨 [수정] m_IsGameOver 상태에서는 New Game 시작 처리만 하고 조작을 막습니다.
-        if(m_IsGameOver)
-        {
-            if (Keyboard.current.enterKey.wasPressedThisFrame) // (MoveSkip은 보통 키 입력이 아니므로, 이 부분은 Update의 Enter키 로직으로 대체될 수 있습니다.)
-            {
-                GameManager.Instance.StartNewGame();
-            }
-            return; 
-        }
-        if (m_IsMoving) return;
-        hasMoved = true;
-        UpdatePlayer();
-    }
-    
-    // [핵심] 각 이동 함수에서도 m_IsGameOver를 확인하여 조작을 막습니다.
-    public void MoveUp()
-    {
-        if (m_IsGameOver || m_IsMoving) return; // 🚨 조작 차단
-        newCellTarget.y++;
-        hasMoved = true;
-        UpdatePlayer();
-    }
-    public void MoveDown()
-    {
-        if (m_IsGameOver || m_IsMoving) return; // 🚨 조작 차단
-        newCellTarget.y--;
-        hasMoved = true;
-        UpdatePlayer();
-    }
-    public void MoveRight()
-    {
-        if (m_IsGameOver || m_IsMoving) return; // 🚨 조작 차단
-        newCellTarget.x++;
-        hasMoved = true;
-        UpdatePlayer();
-    }
-    public void MoveLeft()
-    {
-        if (m_IsGameOver || m_IsMoving) return; // 🚨 조작 차단
-        newCellTarget.x--;
-        hasMoved = true;
-        UpdatePlayer();
+        if (m_IsGameOver || m_IsMoving) return;
+        GameManager.Instance.TurnManager.Tick();
     }
 }

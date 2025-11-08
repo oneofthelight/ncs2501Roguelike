@@ -751,7 +751,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -0.94299316, y: -0.103027344}
   m_SizeDelta: {x: 1261.384, y: 795.36}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &858072256
@@ -1104,6 +1104,7 @@ MonoBehaviour:
   - {fileID: 7754693994964896569, guid: 48998cf891fa5ca45a7f6dff0f7da3a3, type: 3}
   ElitenemyPrefab:
   - {fileID: 2540142403897391866, guid: 3bd886e1d4ca9f9458d1baab2a0adabc, type: 3}
+  TreasurePrefab: {fileID: -6512714594150397340, guid: 483392c2faf6acc40b17fb1b96368d61, type: 3}
 --- !u!1 &1565614324
 GameObject:
   m_ObjectHideFlags: 0
@@ -1140,10 +1141,10 @@ MonoBehaviour:
   UIDoc: {fileID: 664677641}
   AndroidPanel: {fileID: 825660063}
   audioSource: {fileID: 0}
-  maxHP: 100
-  currentHP: 100
-  maxTextHP: 100
-  currentTextHP: 100
+  maxHP: 200
+  currentHP: 200
+  maxTextHP: 200
+  currentTextHP: 200
 --- !u!4 &1565614326
 Transform:
   m_ObjectHideFlags: 0

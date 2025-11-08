@@ -19,10 +19,14 @@ public class GameManager : MonoBehaviour
     public UIDocument UIDoc;
     public GameObject AndroidPanel;
     public AudioSource audioSource;
-    public float maxHP = 100;
-    public float currentHP = 100f;
-    public float maxTextHP = 100f;
-    public float currentTextHP = 100f;
+    public float maxHP = 200;
+    public float currentHP = 200f;
+    public float maxTextHP = 200f;
+    public float currentTextHP = 200f;
+    // 🚨 [추가] Exit이 활성화되어 다음 스테이지로 이동 가능한 상태인지
+    public bool IsExitActive { get; private set; }
+    // 🚨 [추가] 로딩 상태 플래그 (턴 시스템 충돌 방지용)
+    public bool IsLoading { get; private set; }
     //public RecordsManager RecordsManager;
 
     #endregion
@@ -43,7 +47,7 @@ public class GameManager : MonoBehaviour
     private int m_CurrentLevel = 0;
     private string placeholderName;
 
-    public int CurrentLevel 
+    public int CurrentLevel
     {
         get { return m_CurrentLevel; }
         set
@@ -51,7 +55,7 @@ public class GameManager : MonoBehaviour
             m_CurrentLevel = value;
             stageLabel.text = $"Stage [{m_CurrentLevel}]";
         }
-    
+
     }
 
     private void Awake()
@@ -76,8 +80,8 @@ public class GameManager : MonoBehaviour
         AndroidPanel.SetActive(false);
 #endif
         audioSource = GetComponent<AudioSource>();
-        TurnManager = new TurnManager();           // 턴 매니저 지정
-        TurnManager.OnTick += OnTurnHappen;       // OnTick 메소드로 OnTurnHappen넣기
+        TurnManager = new TurnManager();            // 턴 매니저 지정
+        TurnManager.OnTick += OnTurnHappen;        // OnTick 메소드로 OnTurnHappen넣기
 
         // Find the HP bar and other UI elements
         var root = UIDoc.rootVisualElement;
@@ -86,18 +90,18 @@ public class GameManager : MonoBehaviour
         m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");     // 게임오버 메시지 가져오기
         hp_Text = hpFill.Q<Label>("HP_Text");
         stageLabel = root.Q<Label>("StageTxt");  // 게임오버 패널 호출
-                                                 
+
         //m_RecordNameInput = m_GameOverPanel.Q<TextField>("NameInput"); // UXML에서 NameInput이라는 이름으로 TextField를 만들어주세요.
         //m_SaveRecordButton = m_GameOverPanel.Q<Button>("SaveRecordBtn"); // UXML에서 SaveRecordBtn이라는 이름으로 Button을 만들어주세요.
 
         m_GameOverPanel.style.visibility = Visibility.Hidden;
 
-        StartNewGame();                          // 새 게임 불러오기
+        StartNewGame();                              // 새 게임 불러오기
     }
 
     public void Update()
     {
-        if(Input.GetKeyDown(KeyCode.F1))
+        if (Input.GetKeyDown(KeyCode.F1))
         {
             CurrentLevel++;
             NewLevel();
@@ -121,13 +125,40 @@ public class GameManager : MonoBehaviour
         NewLevel();
     }
 
+    public void ActivateExit()
+    {
+        IsExitActive = true;
+        Debug.Log("Treasure 획득! Exit이 활성화되었습니다.");
+        // (필요 시, Exit 오브젝트의 시각적 변화를 여기서 처리할 수 있습니다.)
+    }
     public void NewLevel()
     {
-        // Clean the previous board and initialize a new one with the correct level
+        IsLoading = true; // 로딩 시작 플래그
+
         BoardManager.Clean();
         CurrentLevel++;
+
+        // 새 레벨 시작 시 Exit 상태는 비활성화로 초기화
+        IsExitActive = false;
+
         BoardManager.Init();
-        PlayerController.Spawn(BoardManager, new Vector2Int(1, 1));
+
+        // 1. 플레이어 스폰
+        PlayerController.Spawn(BoardManager, BoardManager.PlayerStartCoord);
+
+        // 🚨 [카메라 스냅 로직 복구] 맵 전환 후 카메라를 플레이어에게 맞춥니다.
+        if (Camera.main != null)
+        {
+            Vector3 targetWorldPos = BoardManager.CellToWorld(BoardManager.PlayerStartCoord);
+            Vector3 cameraPos = Camera.main.transform.position;
+
+            Camera.main.transform.position = new Vector3(
+                targetWorldPos.x,
+                targetWorldPos.y,
+                cameraPos.z
+            );
+        }
+        IsLoading = false; // 로딩 완료
     }
 
     void OnTurnHappen()            // 턴 소비
@@ -135,33 +166,58 @@ public class GameManager : MonoBehaviour
         UpdateHPBar(-1); // Decrease HP by 1 on each turn
     }
 
-    void OnEnable()
+    // 🚨 [수정 1] IsGameOver() 메서드 추가 (EnemyObject1 오류 해결)
+    public bool IsGameOver()
     {
-        
+        // PlayerController가 null이 아니라고 가정하고, PlayerController의 상태를 반환합니다.
+        // PlayerController에 'public bool IsGameOver => m_IsGameOver;' 속성을 추가해야 합니다.
+        if (PlayerController != null)
+        {
+            // PlayerController가 public IsGameOver 속성을 가지고 있다고 가정합니다.
+            return PlayerController.IsGameOver;
+        }
+        return false; // PlayerController가 없으면 게임 오버가 아니라고 가정
     }
 
     public void UpdateHPBar(int amount = 0)
     {
+        // HP 변화 전에 현재 상태를 기억합니다.
+        bool wasGameOver = IsGameOver();
+
         currentHP += amount;
         currentHP = Mathf.Clamp(currentHP, 0, maxHP); // Ensure HP stays within bounds
 
         float hpPercent = currentHP / maxHP;
-        
+
         Length length = new Length(hpPercent * 100, LengthUnit.Percent);
         hpFill.style.width = length;
         hp_Text.text = $"{currentHP}/{maxHP}";
 
-        // 
+        // 🚨 [수정 2] HP 회복 시 게임 오버 상태 해제 로직 추가
+        if (currentHP > 0 && wasGameOver)
+        {
+            // HP가 회복되었고, 이전 상태가 Game Over였다면, Game Over 상태를 해제합니다.
+            // PlayerController의 GameOver()와 반대되는 기능이 필요합니다.
+            if (PlayerController != null)
+            {
+                // PlayerController에 GameOver 상태를 해제하는 함수 (예: ContinueGame)가 없다면
+                // PlayerController의 Init() 함수를 이용하거나, IsGameOver 속성을 통해 직접 접근하는 것이 필요합니다.
+                // PlayerController의 Init() 함수가 m_IsGameOver = false; 를 수행하므로, 이를 재활용합니다.
+                PlayerController.Init();
+                m_GameOverPanel.style.visibility = Visibility.Hidden; // 게임 오버 UI 숨기기
+            }
+        }
+
         if (currentHP <= 0)
         {
             // 🚨 핵심: 이 부분이 호출되어야 합니다!
-            if (PlayerController != null) 
+            if (PlayerController != null)
             {
                 PlayerController.GameOver(); // PlayerController의 m_IsGameOver를 true로 만듭니다.
             }
             // 1. RecordsManager가 있으면 현재 레벨을 기록으로 저장
             //string placeholderName = "Player"; // 나중에 UI 입력 필드 값으로 대체
-        
+
             /*if (RecordsManager != null)
             {
                 // RecordsManager에 레벨과 함께 이름을 전달하여 저장
@@ -177,5 +233,31 @@ public class GameManager : MonoBehaviour
     public void PlaySound(AudioClip clip)
     {
         audioSource.PlayOneShot(clip);
+    }
+
+
+    // 🚨 [추가] 플레이어 HP를 안전하게 회복시키고 UI를 업데이트하는 함수
+    public void RecoverPlayerHealth(int amount)
+    {
+        if (PlayerController == null)
+        {
+            Debug.LogError("PlayerController가 할당되지 않았습니다. HP 회복 불가.");
+            return;
+        }
+
+        // 1. HP 회복
+        // (PlayerController의 HP 속성이나 필드가 public set이 가능해야 합니다.)
+        PlayerController.HP += amount;
+
+        // 2. 최대 HP 제한 (옵션: 플레이어에게 MaxHP 변수가 있다면)
+        // if (PlayerController.HP > PlayerController.MaxHP)
+        // {
+        //     PlayerController.HP = PlayerController.MaxHP;
+        // }
+
+        // 3. UI 업데이트
+        UpdateHPBar();
+
+        Debug.Log($"Treasure 획득: HP {amount} 회복. 현재 HP: {PlayerController.HP}");
     }
 }
