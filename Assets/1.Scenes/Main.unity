@@ -751,7 +751,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.94299316, y: -0.103027344}
+  m_AnchoredPosition: {x: -0.9428711, y: -0.103027344}
   m_SizeDelta: {x: 1261.384, y: 795.36}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &858072256
@@ -1078,6 +1078,8 @@ MonoBehaviour:
   minEnemy: 1
   maxEnemy: 3
   Elitenemy: 2
+  minPotion: 0
+  maxPotion: 0
   GroundTiles:
   - {fileID: 11400000, guid: 5aeac4d41378016419cd159d736e3910, type: 2}
   - {fileID: 11400000, guid: 2bd78de98b18dbe419945ae4258932ac, type: 2}
@@ -1090,6 +1092,8 @@ MonoBehaviour:
   WallTiles:
   - {fileID: 11400000, guid: 020b0609d74a1e8409bb2a7abc60ec10, type: 2}
   - {fileID: 11400000, guid: 69196485e3c7f6d4697e7c3558198b68, type: 2}
+  PotionPrefab:
+  - {fileID: 7376028809291480416, guid: 1298191a94b459148b330c4300b565f5, type: 3}
   FoodPrefab:
   - {fileID: 7100854180994657263, guid: 60dc5708d2524b34bbb6314f172af8c5, type: 3}
   - {fileID: 2879819470561051101, guid: b7798b87617bbf342a21fecc053ec9e8, type: 3}

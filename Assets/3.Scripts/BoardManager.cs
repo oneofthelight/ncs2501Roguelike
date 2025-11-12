@@ -41,8 +41,11 @@ public class BoardManager : MonoBehaviour
     public int minEnemy;
     public int maxEnemy = 10; // 최대값은 적절히 설정
     public int Elitenemy;
+    public int minPotion;
+    public int maxPotion = 3;
     public Tile[] GroundTiles;
     public Tile[] WallTiles;    // 테두리
+    public PotionObject[] PotionPrefab;
     public FoodObject[] FoodPrefab;
     public WallObject[] WallPrefab; // 벽
     public ExitCellObject ExitPrefab;
@@ -71,14 +74,15 @@ public class BoardManager : MonoBehaviour
         Width = MAX_MAP_WIDTH;
         Height = MAX_MAP_HEIGHT;
 
-        // 2. 레벨에 따른 룸 개수 계산 (최소 2개, 3스테이지마다 1개 추가)
-        m_RoomCount = 2 + (GameManager.Instance.CurrentLevel / 3);
+        // 2. 레벨에 따른 룸 개수 계산 (최소 2개, 6스테이지마다 1개 추가)
+        m_RoomCount = 2 + (GameManager.Instance.CurrentLevel / 6);
         if (m_RoomCount > 10) m_RoomCount = 10; // 최대 방 개수 제한 (필요에 따라 조절)
 
         // 3. 맵 오브젝트 개수 스케일링 (이제 룸의 크기 대신 룸 내 오브젝트 밀도를 조정)
-        minFood = 6 + (GameManager.Instance.CurrentLevel / 10) * 1;
+        minFood = 6 + (GameManager.Instance.CurrentLevel / 10) * 2;
         minEnemy = 3 + (GameManager.Instance.CurrentLevel / 10) * 2;
-        minWall = 5 + (GameManager.Instance.CurrentLevel / 10) * 2;
+        minWall = 5 + (GameManager.Instance.CurrentLevel / 6) * 2;
+        minPotion = 2 + (GameManager.Instance.CurrentLevel / 10) * 1;
         Elitenemy = 1 + (GameManager.Instance.CurrentLevel / 20);
 
         m_Tilemap = GetComponentInChildren<Tilemap>();
@@ -150,6 +154,10 @@ public class BoardManager : MonoBehaviour
         if (GameManager.Instance.CurrentLevel >= 20)
         {
             GenerateElitenemy();
+        }
+        if (GameManager.Instance.CurrentLevel >= 10)
+        {
+            GeneratePotion();
         }
         GenerateTreasure(); // 이 함수는 이제 카운터 대신 Exit 활성화만 합니다.
         GenerateFood();
@@ -344,6 +352,23 @@ public class BoardManager : MonoBehaviour
             int foodType = Random.Range(0, FoodPrefab.Length);
             FoodObject newFood = Instantiate(FoodPrefab[foodType]);
             AddObject(newFood, coord);
+        }
+    }
+
+    private void GeneratePotion()
+    {
+        int PotionCount = Random.Range(minPotion, maxPotion + 1);
+        for (int i = 0; i < PotionCount; ++i)
+        {
+            if (m_EmptyCellsList.Count == 0) break;
+            int randomIndex = Random.Range(0, m_EmptyCellsList.Count);
+            Vector2Int coord = m_EmptyCellsList[randomIndex];
+
+            m_EmptyCellsList.RemoveAt(randomIndex);
+
+            int foodType = Random.Range(0, PotionPrefab.Length);
+            PotionObject newPotion = Instantiate(PotionPrefab[foodType]);
+            AddObject(newPotion, coord);
         }
     }
     void GenerateWall()
