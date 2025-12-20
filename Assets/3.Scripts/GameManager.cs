@@ -2,262 +2,364 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UIElements; // UI Toolkit
+using TMPro;                // TextMeshPro
+using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class GameManager : MonoBehaviour
 {
-
-    // Sigleton 싱글톤이 중요한 기능을 static 처럼 사용하기 위해 쓰는 방식
-    #region Singleton
+    // --- 1. 싱글톤 설정 ---
     public static GameManager Instance { get; private set; }
-    #endregion
+    public static GameManager instance => Instance; // 소문자 호출 대응 (호환성)
 
-    #region Public
+    // --- 2. 인스펙터 노출 필드 (로그라이크) ---
+    [Header("Roguelike System")]
     public BoardManager BoardManager;
     public PlayerController PlayerController;
-    public TurnManager TurnManager { get; private set; }
     public UIDocument UIDoc;
-    public GameObject AndroidPanel;
-    public AudioSource audioSource;
     public float maxHP = 200;
     public float currentHP = 200f;
-    public float maxTextHP = 200f;
-    public float currentTextHP = 200f;
-    // 🚨 [추가] Exit이 활성화되어 다음 스테이지로 이동 가능한 상태인지
+
+    // --- 3. 인스펙터 노출 필드 (슈팅 & 보스전) ---
+    [Header("Shooting & Boss System")]
+    public GameObject panelGameOver;
+    public GameObject monsterPrefab;
+    public List<GameObject> monsterPool = new List<GameObject>();
+    public int maxMonsters = 10;
+    public float createTime = 3.0f;
+    public TMP_Text scoreText;
+    public TMP_Text killText;
+    public List<Transform> spawnPoints = new List<Transform>();
+
+    [Header("Common Assets")]
+    public GameObject AndroidPanel;
+    public AudioSource audioSource;
+
+    // --- 4. 내부 상태 변수 ---
+    private int m_CurrentLevel = 0;
+    private int totScore = 0;
+    private int killcount;
+    private bool _isGameOver;
+
+    public TurnManager TurnManager { get; private set; }
     public bool IsExitActive { get; private set; }
-    // 🚨 [추가] 로딩 상태 플래그 (턴 시스템 충돌 방지용)
     public bool IsLoading { get; private set; }
-    //public RecordsManager RecordsManager;
 
-    #endregion
-
-    #region Private
-    private const string GOS1 = "Game Over!\n\nYou traveled through";
-    private const string GOS2 = "levels \n\n(Press Enter to New Game)";
+    // --- 5. UI 요소 (UIToolkit) ---
     private VisualElement hpFill;
     private VisualElement m_GameOverPanel;
+    private VisualElement background;
+
     private Label hp_Text;
     private Label m_GameOverMessage;
     private Label stageLabel;
-    //private TextField m_RecordNameInput;
-    //private Button m_SaveRecordButton;
 
-    #endregion
+    private const string GOS1 = "Game Over!\n\nYou traveled through ";
+    private const string GOS2 = " levels \n\n(Press Enter to New Game)";
 
-    private int m_CurrentLevel = 0;
-    private string placeholderName;
+    // --- 6. 속성 (Properties) ---
+    // [해결] EnemyObject(함수형)와 PlayerCtrl(변수형) 호출 모두 대응
+    public bool IsGameOver
+    {
+        get => _isGameOver;
+        set
+        {
+            _isGameOver = value;
+            if (_isGameOver) CancelInvoke("CreateMonster");
+        }
+    }
+
+    // 함수 형태로 호출하는 EnemyObject를 위한 래퍼 함수
 
     public int CurrentLevel
     {
-        get { return m_CurrentLevel; }
+        get => m_CurrentLevel;
         set
         {
             m_CurrentLevel = value;
-            stageLabel.text = $"Stage [{m_CurrentLevel}]";
+            if (stageLabel != null) stageLabel.text = $"Stage [{m_CurrentLevel}]";
         }
-
     }
 
+    public int KillCount
+    {
+        get => killcount;
+        set
+        {
+            killcount = Mathf.Min(value, 99);
+            DisplayKillCount();
+        }
+    }
+
+    // --- 7. 초기화 및 생명주기 ---
     private void Awake()
     {
-        if (Instance != null)  // 여기 있는 if 내용이 게임 매니저를 static처럼 사용하기 위한 것
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
     {
-#if UNITY_ANDROID
-        Camera camera = Camera.main;
-        camera.orthographicSize = 12;
-        camera.transform.position = new Vector3(6, 4, -10);
-        AndroidPanel.SetActive(true);
-#else
-        AndroidPanel.SetActive(false);
-#endif
+        InitializePlatformSettings();
         audioSource = GetComponent<AudioSource>();
-        TurnManager = new TurnManager();            // 턴 매니저 지정
-        TurnManager.OnTick += OnTurnHappen;        // OnTick 메소드로 OnTurnHappen넣기
+        TurnManager = new TurnManager();
+        TurnManager.OnTick += OnTurnHappen;
 
-        // Find the HP bar and other UI elements
-        var root = UIDoc.rootVisualElement;
-        hpFill = root.Q<VisualElement>("HP_bar");
-        m_GameOverPanel = root.Q<VisualElement>("GameOverPanel");  // 게임오버 패널 호출
-        m_GameOverMessage = m_GameOverPanel.Q<Label>("GameOverMessage");     // 게임오버 메시지 가져오기
-        hp_Text = hpFill.Q<Label>("HP_Text");
-        stageLabel = root.Q<Label>("StageTxt");  // 게임오버 패널 호출
+        SetupUIToolkit();
 
-        //m_RecordNameInput = m_GameOverPanel.Q<TextField>("NameInput"); // UXML에서 NameInput이라는 이름으로 TextField를 만들어주세요.
-        //m_SaveRecordButton = m_GameOverPanel.Q<Button>("SaveRecordBtn"); // UXML에서 SaveRecordBtn이라는 이름으로 Button을 만들어주세요.
+        if (panelGameOver != null) panelGameOver.SetActive(false);
 
-        m_GameOverPanel.style.visibility = Visibility.Hidden;
+        // 🚨 몬스터 풀 생성은 여기서 하지 않고 StartNewGame 내부 또는 보스 씬 진입 시 수행합니다.
 
-        StartNewGame();                              // 새 게임 불러오기
+        totScore = PlayerPrefs.GetInt("TOT_SCORE", 0);
+        DisplayerScore(0);
+
+        // ✅ [복구] 게임 시작 시 첫 로그라이크 스테이지를 생성하기 위해 호출합니다.
+        StartNewGame();
     }
 
-    public void Update()
+    void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            CurrentLevel++;
-            NewLevel();
-        }
-
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            CurrentLevel--;
-            NewLevel();
-        }
+        // 디버그용 레벨 이동 (필요 없으면 삭제 가능)
+        if (Input.GetKeyDown(KeyCode.F1)) { CurrentLevel++; NewLevel(); }
     }
 
+    // --- 8. 게임 흐름 제어 (핵심) ---
     public void StartNewGame()
     {
-        m_GameOverPanel.style.visibility = Visibility.Hidden;
-        CurrentLevel = 0;
-        currentHP = maxHP; // Reset HP for a new game
-        UpdateHPBar();
-        // 🚨 [핵심] 새 게임 시작 시 조작 가능하도록 Init()을 호출합니다.
-        PlayerController.Init(); // 이 안에서 m_IsGameOver가 false로 재설정됩니다.
-        NewLevel();
+        ResetGameState();
+        NewLevel(); 
     }
 
-    public void ActivateExit()
-    {
-        IsExitActive = true;
-        Debug.Log("Treasure 획득! Exit이 활성화되었습니다.");
-        // (필요 시, Exit 오브젝트의 시각적 변화를 여기서 처리할 수 있습니다.)
-    }
     public void NewLevel()
     {
-        IsLoading = true; // 로딩 시작 플래그
-
-        BoardManager.Clean();
-        CurrentLevel++;
-
-        // 새 레벨 시작 시 Exit 상태는 비활성화로 초기화
-        IsExitActive = false;
-
-        BoardManager.Init();
-
-        // 1. 플레이어 스폰
-        PlayerController.Spawn(BoardManager, BoardManager.PlayerStartCoord);
-
-        // 🚨 [카메라 스냅 로직 복구] 맵 전환 후 카메라를 플레이어에게 맞춥니다.
-        if (Camera.main != null)
+        // 🚨 수정 포인트: CurrentLevel이 36인 상태에서 '출구'를 밟아 NewLevel이 호출되면 씬 전환
+        if (CurrentLevel >= 36)
         {
-            Vector3 targetWorldPos = BoardManager.CellToWorld(BoardManager.PlayerStartCoord);
-            Vector3 cameraPos = Camera.main.transform.position;
-
-            Camera.main.transform.position = new Vector3(
-                targetWorldPos.x,
-                targetWorldPos.y,
-                cameraPos.z
-            );
-        }
-        IsLoading = false; // 로딩 완료
-    }
-
-    void OnTurnHappen()            // 턴 소비
-    {
-        UpdateHPBar(-1); // Decrease HP by 1 on each turn
-    }
-
-    // 🚨 [수정 1] IsGameOver() 메서드 추가 (EnemyObject1 오류 해결)
-    public bool IsGameOver()
-    {
-        // PlayerController가 null이 아니라고 가정하고, PlayerController의 상태를 반환합니다.
-        // PlayerController에 'public bool IsGameOver => m_IsGameOver;' 속성을 추가해야 합니다.
-        if (PlayerController != null)
-        {
-            // PlayerController가 public IsGameOver 속성을 가지고 있다고 가정합니다.
-            return PlayerController.IsGameOver;
-        }
-        return false; // PlayerController가 없으면 게임 오버가 아니라고 가정
-    }
-
-    public void UpdateHPBar(int amount = 0)
-    {
-        // HP 변화 전에 현재 상태를 기억합니다.
-        bool wasGameOver = IsGameOver();
-
-        currentHP += amount;
-        currentHP = Mathf.Clamp(currentHP, 0, maxHP); // Ensure HP stays within bounds
-
-        float hpPercent = currentHP / maxHP;
-
-        Length length = new Length(hpPercent * 100, LengthUnit.Percent);
-        hpFill.style.width = length;
-        hp_Text.text = $"{currentHP}/{maxHP}";
-
-        // 🚨 [수정 2] HP 회복 시 게임 오버 상태 해제 로직 추가
-        if (currentHP > 0 && wasGameOver)
-        {
-            // HP가 회복되었고, 이전 상태가 Game Over였다면, Game Over 상태를 해제합니다.
-            // PlayerController의 GameOver()와 반대되는 기능이 필요합니다.
-            if (PlayerController != null)
-            {
-                // PlayerController에 GameOver 상태를 해제하는 함수 (예: ContinueGame)가 없다면
-                // PlayerController의 Init() 함수를 이용하거나, IsGameOver 속성을 통해 직접 접근하는 것이 필요합니다.
-                // PlayerController의 Init() 함수가 m_IsGameOver = false; 를 수행하므로, 이를 재활용합니다.
-                PlayerController.Init();
-                m_GameOverPanel.style.visibility = Visibility.Hidden; // 게임 오버 UI 숨기기
-            }
-        }
-
-        if (currentHP <= 0)
-        {
-            // 🚨 핵심: 이 부분이 호출되어야 합니다!
-            if (PlayerController != null)
-            {
-                PlayerController.GameOver(); // PlayerController의 m_IsGameOver를 true로 만듭니다.
-            }
-            // 1. RecordsManager가 있으면 현재 레벨을 기록으로 저장
-            //string placeholderName = "Player"; // 나중에 UI 입력 필드 값으로 대체
-
-            /*if (RecordsManager != null)
-            {
-                // RecordsManager에 레벨과 함께 이름을 전달하여 저장
-                RecordsManager.AddNewRecord(CurrentLevel, placeholderName); 
-            }
-            */
-            // 2. 게임 오버 UI 표시
-            m_GameOverPanel.style.visibility = Visibility.Visible;
-            m_GameOverMessage.text = GOS1 + CurrentLevel + GOS2;
-        }
-    }
-
-    public void PlaySound(AudioClip clip)
-    {
-        audioSource.PlayOneShot(clip);
-    }
-
-
-    // 🚨 [추가] 플레이어 HP를 안전하게 회복시키고 UI를 업데이트하는 함수
-    public void RecoverPlayerHealth(int amount)
-    {
-        if (PlayerController == null)
-        {
-            Debug.LogError("PlayerController가 할당되지 않았습니다. HP 회복 불가.");
+            Debug.Log("최종 스테이지 클리어! 보스 스테이지로 이동합니다.");
+            SceneManager.LoadScene("SpaceShooterScene"); // 👈 유니티 Project 창의 씬 이름과 정확히 일치해야 함
             return;
         }
 
-        // 1. HP 회복
-        // (PlayerController의 HP 속성이나 필드가 public set이 가능해야 합니다.)
-        PlayerController.HP += amount;
+        IsLoading = true;
+        BoardManager.Clean();
 
-        // 2. 최대 HP 제한 (옵션: 플레이어에게 MaxHP 변수가 있다면)
-        // if (PlayerController.HP > PlayerController.MaxHP)
-        // {
-        //     PlayerController.HP = PlayerController.MaxHP;
-        // }
+        // 스테이지 증가 (전환 조건 뒤에 배치하여 36 스테이지 플레이를 보장)
+        CurrentLevel++;
 
-        // 3. UI 업데이트
+        IsExitActive = false;
+        BoardManager.Init();
+
+        if (PlayerController != null)
+            PlayerController.Spawn(BoardManager, BoardManager.PlayerStartCoord);
+
+        UpdateCameraPosition();
+        IsLoading = false;
+    }
+
+    // --- 9. 체력 및 전투 로직 ---
+    void OnTurnHappen() => UpdateHPBar(-1); // 턴마다 체력 감소
+
+    public void UpdateHPBar(int amount = 0)
+    {
+        currentHP = Mathf.Clamp(currentHP + amount, 0, maxHP);
+
+        if (hpFill != null) hpFill.style.width = Length.Percent((currentHP / maxHP) * 100);
+        if (hp_Text != null) hp_Text.text = $"{currentHP}/{maxHP}";
+
+        if (currentHP <= 0) DisplayerGameOver();
+    }
+
+    public void RecoverPlayerHealth(int amount)
+    {
+        currentHP = Mathf.Min(currentHP + amount, maxHP);
+        UpdateHPBar(0);
+    }
+
+    public void DisplayerGameOver()
+    {
+        IsGameOver = true;
+        if (PlayerController != null) PlayerController.GameOver();
+
+        if (m_GameOverPanel != null)
+        {
+            m_GameOverPanel.style.visibility = Visibility.Visible;
+            if (m_GameOverMessage != null) m_GameOverMessage.text = GOS1 + CurrentLevel + GOS2;
+        }
+        if (panelGameOver != null) panelGameOver.SetActive(true);
+    }
+
+    // --- 10. 몬스터 풀링 및 스코어 (슈팅 시스템) ---
+    private void CreateMonsterPool()
+    {
+        if (monsterPrefab == null) return;
+        for (int i = 0; i < maxMonsters; i++)
+        {
+            GameObject obj = Instantiate(monsterPrefab);
+            obj.SetActive(false);
+            monsterPool.Add(obj);
+        }
+    }
+
+    public void CreateMonster()
+    {
+        // 1. 씬 이름 체크
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SpaceShooterScene") return;
+
+        // 2. 🚨 [강력한 중복 체크] 풀 안에 활성화된 몬스터가 하나라도 있는지 검사
+        if (monsterPool != null)
+        {
+            foreach (GameObject m in monsterPool)
+            {
+                // 리스트 안의 몬스터가 씬에서 켜져 있다면(Active) 함수를 즉시 종료
+                if (m != null && m.activeSelf)
+                {
+                    return;
+                }
+            }
+        }
+
+        // 3. 스폰 포인트 리스트 재수집 및 예외 처리
+        if (spawnPoints == null || spawnPoints.Count == 0 || (spawnPoints.Count > 0 && spawnPoints[0] == null))
+        {
+            SetupSpawnPoints();
+        }
+
+        if (spawnPoints == null || spawnPoints.Count == 0) return;
+
+        // 4. 몬스터 소환 로직
+        GameObject mon = GetMonsterInPool();
+        if (mon != null)
+        {
+            int idx = UnityEngine.Random.Range(0, spawnPoints.Count);
+            if (spawnPoints[idx] == null) { SetupSpawnPoints(); return; }
+
+            mon.transform.position = spawnPoints[idx].position;
+            mon.transform.rotation = spawnPoints[idx].rotation;
+
+            mon.SetActive(true);
+
+            var agent = mon.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            if (agent != null)
+            {
+                agent.enabled = false;
+                agent.enabled = true;
+            }
+        }
+    }
+
+    // 1. 몬스터를 가져오는 함수 (비어있으면 새로 생성하도록 보강)
+    public GameObject GetMonsterInPool()
+    {
+        // 리스트가 없거나 파괴되었다면 새로 생성
+        if (monsterPool == null) monsterPool = new List<GameObject>();
+
+        // 사용할 수 있는 비활성 객체 찾기
+        foreach (var mon in monsterPool)
+        {
+            if (mon != null && !mon.activeSelf) return mon;
+        }
+
+        // 🚨 [핵심] 만약 사용할 객체가 없다면 프리팹을 새로 생성해서 리스트에 추가
+        if (monsterPrefab != null)
+        {
+            GameObject newMon = Instantiate(monsterPrefab);
+            newMon.SetActive(false);
+            monsterPool.Add(newMon);
+            return newMon;
+        }
+
+        Debug.LogError("🚨 GameManager: monsterPrefab이 연결되어 있지 않아 생성에 실패했습니다!");
+        return null;
+    }
+
+    public void DisplayerScore(int score)
+    {
+        totScore = Mathf.Min(totScore + score, 99999);
+        if (scoreText != null) scoreText.text = $"SCORE: {totScore:#,##0}";
+        PlayerPrefs.SetInt("TOT_SCORE", totScore);
+    }
+
+    public void DisplayKillCount()
+    {
+        if (killText != null) killText.text = $"{killcount:00}";
+    }
+
+    // --- 11. 유틸리티 함수 ---
+    private void InitializePlatformSettings()
+    {
+#if UNITY_ANDROID
+        if(Camera.main != null) { Camera.main.orthographicSize = 12; Camera.main.transform.position = new Vector3(6, 4, -10); }
+        if(AndroidPanel != null) AndroidPanel.SetActive(true);
+#else
+        if (AndroidPanel != null) AndroidPanel.SetActive(false);
+#endif
+    }
+
+    private void SetupUIToolkit()
+    {
+        if (UIDoc == null) return;
+        var root = UIDoc.rootVisualElement;
+        hpFill = root.Q<VisualElement>("HP_bar");
+        m_GameOverPanel = root.Q<VisualElement>("GameOverPanel");
+        hp_Text = hpFill?.Q<Label>("HP_Text");
+        stageLabel = root.Q<Label>("StageTxt");
+        background = root.Q<VisualElement>("Back");
+
+        if (m_GameOverPanel != null) m_GameOverPanel.style.visibility = Visibility.Hidden;
+    }
+
+    private void ResetGameState()
+    {
+        if (m_GameOverPanel != null) m_GameOverPanel.style.visibility = Visibility.Hidden;
+        if (panelGameOver != null) panelGameOver.SetActive(false);
+
+        CurrentLevel = 0;
+        currentHP = maxHP;
+        IsGameOver = false;
         UpdateHPBar();
 
-        Debug.Log($"Treasure 획득: HP {amount} 회복. 현재 HP: {PlayerController.HP}");
+        if (PlayerController != null) PlayerController.Init();
+
+        // 🚨 중요: 로그라이크 씬에서 몬스터가 생성되지 않도록 Invoke를 여기서 예약하지 않습니다.
+        CancelInvoke("CreateMonster");
     }
+
+    private void UpdateCameraPosition()
+    {
+        if (Camera.main != null && BoardManager != null)
+        {
+            Vector3 targetPos = BoardManager.CellToWorld(BoardManager.PlayerStartCoord);
+            Camera.main.transform.position = new Vector3(targetPos.x, targetPos.y, Camera.main.transform.position.z);
+        }
+    }
+
+    public void SetupSpawnPoints()
+    {
+        // 현재 활성화된 씬에서 "SpawnPointGroup"을 검색
+        GameObject g = GameObject.Find("SpawnPointGroup");
+
+        if (g != null)
+        {
+            spawnPoints.Clear();
+            foreach (Transform t in g.transform)
+            {
+                spawnPoints.Add(t);
+            }
+            Debug.Log($"[GameManager] {spawnPoints.Count}개의 스폰 포인트를 갱신했습니다.");
+        }
+    }
+
+    public void ActivateExit() => IsExitActive = true;
+    public void PlaySound(AudioClip clip) { if (clip != null) audioSource.PlayOneShot(clip); }
+
+#if UNITY_EDITOR
+    [MenuItem("MyMenu/SpaceShooter/Reset score")]
+    public static void ResetScore() { PlayerPrefs.SetInt("TOT_SCORE", 0); Debug.Log("Score Reset Done."); }
+#endif
 }

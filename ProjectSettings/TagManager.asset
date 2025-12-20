@@ -3,7 +3,14 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - HP_BAR
+  - KILL_COUNT
+  - BULLET
+  - PUNCH
+  - MONSTER
+  - PLAYER
+  - Enemy
   layers:
   - Default
   - TransparentFX

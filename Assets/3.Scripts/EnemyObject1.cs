@@ -44,7 +44,7 @@ public class EnemyObject1 : CellObject
         Debug.Log(m_CurrentHealth);
         if (m_CurrentHealth <= 0)
         {
-            if (GameManager.Instance != null && !GameManager.Instance.IsGameOver())
+            if (GameManager.Instance != null && !GameManager.Instance.IsGameOver)
             {
                 GameManager.Instance.UpdateHPBar(healAmountOnDeath);
                 GameManager.Instance.UpdateHPBar(Amount);

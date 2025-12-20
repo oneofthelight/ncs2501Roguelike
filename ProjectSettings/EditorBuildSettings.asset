@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
     path: Assets/SimplePixelUI/ExamleScene.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
     path: Assets/1.Scenes/Main.unity
     guid: 455da1c6cf7099c4288615feb6b38a26
+  - enabled: 1
+    path: Assets/1.Scenes/SpaceShooterScene.unity
+    guid: dcf2d9c71753be344a085c31ec117c83
   m_configObjects: {}
