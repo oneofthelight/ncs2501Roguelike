@@ -1,81 +1,107 @@
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections;
 
 public class MonsterCtrl : MonoBehaviour
 {
-    // 상태 열거형
-    public enum State { IDLE, TRACE, ATTACK, DIE }
+    private const int MAX_MONSTER_HP = 100;
+    private const int HIT_MONSTER_HP = 10;
+    #region Hash
+    // 해시값 추출
+    private readonly int hashTrace = Animator.StringToHash("IsTrace");
+    private readonly int hashAttack = Animator.StringToHash("IsAttack");
+    private readonly int hashhit = Animator.StringToHash("Hit");
+    private readonly int hashPlayerDie = Animator.StringToHash("PlayerDie");
+    private readonly int hashSpeed = Animator.StringToHash("Speed");
+    private readonly int hashDie = Animator.StringToHash("Die");
+    private readonly int hashVictory = Animator.StringToHash("GangnamStyle"); // 파라미터 이름 확인!
+    #endregion
+    public const float TIMER_CHECK = 0.3f;
+    public enum State
+    {
+        IDLE,
+        TRACE,
+        ATTACK,
+        DIE
+    }
     public State state = State.IDLE;
-
+    public float traceDist = 10.0f;
+    public float attackDist = 2.0f;
+    public const int SCORE_KILL = 50;
+    public bool isDie = false;
     private Transform monsterTr;
     private Transform playerTr;
     private NavMeshAgent agent;
     private Animator animator;
+    private GameObject bloodEffect;  // 혈흔 효과 프리팹
+    private int hp = 100;
+    // 스크립트가 활성화 될때마다 호출되는 함수
+    void OnEnable()
+    {
+        // 이벤트 발생 시 수행할 함수 연결
+        PlayerCtrl.OnPlayerDie += this.OnPlayerDie;
+        // 몬스터의 상태를 체크하는 코루틴 함수 호출
+        StartCoroutine(CheckMonsterState());
+        // 상태에 따라 몬스터의 행돌을 수행하는 코루틴 함수 호출
+        StartCoroutine(MonsterAction());
+    }
+    // 스크립트가 비활성 될 때마다 호출되는 함수
+    void OnDisable()
+    {
+        // 기존에 연결된 함수 해제
+        PlayerCtrl.OnPlayerDie -= this.OnPlayerDie;
 
-    // 애니메이션 해시값
-    private readonly int hashTrace = Animator.StringToHash("IsTrace");
-    private readonly int hashAttack = Animator.StringToHash("IsAttack");
-    private readonly int hashDie = Animator.StringToHash("Die");
-    private readonly int hashPlayerDie = Animator.StringToHash("PlayerDie");
-    private readonly int hashSpeed = Animator.StringToHash("Speed");
-
-    [Header("Monster Settings")]
-    public float traceDist = 10.0f;
-    public float attackDist = 2.0f;
-    private bool isDie = false;
-
+    }
     void Awake()
     {
         monsterTr = GetComponent<Transform>();
+        playerTr = GameObject.FindWithTag("PLAYER").GetComponent<Transform>();
         agent = GetComponent<NavMeshAgent>();
+        agent.updateRotation = false;
         animator = GetComponent<Animator>();
-
-        // 플레이어 찾기 (보스 씬 기준)
-        GameObject playerObj = GameObject.FindWithTag("PLAYER");
-        if (playerObj != null) playerTr = playerObj.transform;
+        bloodEffect = Resources.Load<GameObject>("BloodSprayEffect");
     }
-
-    // 🚨 [핵심 수정] 오브젝트가 활성화될 때마다 실행
-    void OnEnable()
-    {
-        isDie = false;
-        state = State.IDLE;
-
-        // 플레이어 사망 이벤트 구독
-        PlayerCtrl.OnPlayerDie += this.OnPlayerDie;
-
-        StartCoroutine(CheckMonsterState());
-        StartCoroutine(MonsterAction());
-    }
-
-    // 🚨 [핵심 수정] 오브젝트가 비활성화(풀에 회수)될 때 실행
-    void OnDisable()
-    {
-        // 🚨 중요: 반드시 이벤트를 해제해야 MissingReferenceException이 발생하지 않습니다.
-        PlayerCtrl.OnPlayerDie -= this.OnPlayerDie;
-        StopAllCoroutines();
-    }
-
     IEnumerator CheckMonsterState()
     {
         while (!isDie)
         {
-            yield return new WaitForSeconds(0.3f);
-
-            if (playerTr == null) continue;
-
+            // 0.3ch 대기하는 동안 제어권 넘김
+            yield return new WaitForSeconds(TIMER_CHECK);
+            //몬스터의 상태가 Die 일때 코루틴 종료
+            if (state == State.DIE) yield break;
             float distance = Vector3.Distance(playerTr.position, monsterTr.position);
 
             if (distance <= attackDist)
+            {
                 state = State.ATTACK;
+            }
             else if (distance <= traceDist)
+            {
                 state = State.TRACE;
+            }
             else
+            {
                 state = State.IDLE;
+            }
         }
     }
 
+    // Update is called once per frame
+    void OnDrawGizmos()
+    {
+        if (state == State.TRACE)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(transform.position, traceDist);
+        }
+        if (state == State.ATTACK)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, attackDist);
+        }
+    }
     IEnumerator MonsterAction()
     {
         while (!isDie)
@@ -99,71 +125,129 @@ public class MonsterCtrl : MonoBehaviour
                     isDie = true;
                     agent.isStopped = true;
                     animator.SetTrigger(hashDie);
+                    // 몬스터의 Collider 비활성화
                     GetComponent<CapsuleCollider>().enabled = false;
+                    // 몬스터의 손에 달려있는 Collider 비활성화
+                    SphereCollider[] sc = GetComponentsInChildren<SphereCollider>();
+                    foreach (var item in sc)
+                    {
+                        item.enabled = false;
+                    }
+                    // 일정시간 대기 후 오브젝트 풀링으로 환원
+                    yield return new WaitForSeconds(3.0f);
+                    // 사망 후 다시 사용될 때를 위해 hp값 초기화
+                    isDie = false;
+                    GetComponent<CapsuleCollider>().enabled = true;
+                    foreach (var item in sc)
+                    {
+                        item.enabled = true;
+                    }
+                    state = State.IDLE;
+                    // 몬스터를 비활성화
+                    this.gameObject.SetActive(false);
                     break;
+
             }
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(TIMER_CHECK);
+        }
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("BULLET"))
+        {
+            Destroy(collision.gameObject);
+        }
+    }
+    public void OnDamage(Vector3 pos, Vector3 normal)
+    {
+        if (isDie || state == State.DIE) return;
+
+        // HP 차감
+        hp -= HIT_MONSTER_HP;
+        Debug.Log($"<color=red>몬스터 피격! 현재 HP: {hp}</color>");
+
+        // 피격 애니메이션 트리거
+        animator.SetTrigger(hashhit);
+
+        // 사망 판정
+        if (hp <= 0)
+        {
+            Debug.Log("<color=yellow>몬스터 HP 0 달성! 사망 로직 진입</color>");
+            Die(); // 🚨 즉시 사망 함수 호출
+        }
+    }
+    private void ShowBloodEffect(Vector3 pos, Quaternion rot)
+    {
+        GameObject blood = Instantiate<GameObject>(bloodEffect, pos, rot, monsterTr);
+        Destroy(blood, 1.0f);
+    }
+    void OnTriggerEnter(Collider coll)
+    {
+        Debug.Log(coll.gameObject.name);
+    }
+    private void OnPlayerDie()
+    {
+        Debug.Log("<color=orange>1. MonsterCtrl: OnPlayerDie 실행됨</color>");
+
+        if (this == null || !gameObject.activeInHierarchy) return;
+
+        StopAllCoroutines();
+        if (agent != null) agent.isStopped = true;
+
+        animator.Play("GangnamStyle", -1, 0f);
+
+        // 🚨 GameManager 호출 전 체크
+        if (GameManager.instance != null)
+        {
+            Debug.Log("<color=orange>2. MonsterCtrl: GameManager instance 찾음. UI 호출 시도!</color>");
+            GameManager.instance.ShowGameOverUI();
+        }
+        else
+        {
+            Debug.LogError("<color=red>🚨 MonsterCtrl: GameManager instance가 null입니다!</color>");
         }
     }
 
-    // 🚨 [에러 해결 버전] 플레이어 사망 시 호출되는 함수
-    private void OnPlayerDie()
+    void Update()
     {
-        // 1. 자기 자신이 이미 파괴되었거나 비활성 상태인지 확인
-        if (this == null || !gameObject.activeInHierarchy) return;
-
-        // 모든 행동 중지
-        StopAllCoroutines();
-        if (agent != null && agent.enabled) agent.isStopped = true;
-
-        // 플레이어의 죽음을 비웃는(?) 애니메이션 등 연출
-        animator.SetFloat(hashSpeed, UnityEngine.Random.Range(0.8f, 1.2f));
-        animator.SetTrigger(hashPlayerDie);
+        if (agent.remainingDistance >= 2.0f)
+        {
+            Vector3 direction = agent.desiredVelocity;
+            Quaternion rot = Quaternion.LookRotation(direction);
+            monsterTr.rotation = Quaternion.Slerp(monsterTr.rotation, rot, Time.deltaTime * 10.0f);
+        }
     }
-    // 🚨 완전히 파괴될 때를 대비한 2중 안전장치
-    void OnDestroy()
-    {
-        PlayerCtrl.OnPlayerDie -= this.OnPlayerDie;
-    }
-    // FireCtrl에서 보내는 2개의 인자(Vector3, Vector3)를 받도록 수정
-    public void OnDamage(Vector3 pos, Vector3 normal)
-    {
-        if (isDie) return;
-
-        Debug.Log($"몬스터 피격! 위치: {pos}");
-
-        // 필요하다면 여기서 피격 이펙트(혈흔 등)를 생성할 수 있습니다.
-        // CreateBloodEffect(pos, normal); 
-
-        // 현재는 한 대 맞으면 바로 죽는 로직
-        Die();
-    }
-
-    // 사망 로직
     private void Die()
     {
         if (isDie) return;
-
         isDie = true;
         state = State.DIE;
 
+        // 1. 모든 행동 중지
+        StopAllCoroutines();
         if (agent != null) agent.isStopped = true;
 
+        // 2. 물리 판정 제거 (사체에 총알이 더 이상 안 맞게)
+        var collider = GetComponent<CapsuleCollider>();
+        if (collider != null) collider.enabled = false;
+
+        // 3. 사망 애니메이션 재생
         animator.SetTrigger(hashDie);
 
-        // 더 이상 총에 맞지 않게 콜라이더 끔
-        GetComponent<CapsuleCollider>().enabled = false;
+        // 4. 🚨 GameManager를 통해 GameClear UI 호출
+        if (GameManager.instance != null)
+        {
+            Debug.Log("GameManager에게 GameClear UI 요청");
+            GameManager.instance.ShowGameClearUI();
+        }
+        else
+        {
+            Debug.LogError("GameManager 인스턴스를 찾을 수 없어 UI를 띄우지 못했습니다.");
+        }
 
-        Debug.Log("보스 몬스터 사망!");
-
-        // 2초 뒤에 다시 소환될 수 있도록 풀로 회수
-        Invoke("ReturnToPool", 2.0f);
-    }
-
-    private void ReturnToPool()
-    {
-        // 다시 켜줄 것들 정리 (재소환 대비)
-        GetComponent<CapsuleCollider>().enabled = true;
-        gameObject.SetActive(false);
+        // 5. 시체 제거 (옵션: 3초 후)
+        // Invoke("ReturnToPool", 3.0f);
     }
 }
+
+

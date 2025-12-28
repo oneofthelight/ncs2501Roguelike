@@ -41,22 +41,30 @@ public class FireCtrl : MonoBehaviour
         isPlayerDie = true;
     }
     void Update()
-    {
-        if (isPlayerDie) return;
+{
+    if (isPlayerDie) return;
 
-        Debug.DrawRay(firePos.position, firePos.forward * BULLET_DISTANCE, Color.green);
-        // 마우스 왼쪽 버튼을 클릭 했을 때 Fire 함수 호출
-        if (Input.GetMouseButtonDown(0))
-        {
-            Fire();
-            int mask = 1 << LayerMask.NameToLayer("MONSTER_BODY");
-            if(Physics.Raycast(firePos.position, firePos.forward, out hit, BULLET_DISTANCE, mask))
+    Debug.DrawRay(firePos.position, firePos.forward * BULLET_DISTANCE, Color.green);
+
+    if (Input.GetMouseButtonDown(0))
+    {
+        Fire();
+
+            if (Physics.Raycast(firePos.position, firePos.forward, out hit, BULLET_DISTANCE))
             {
-                Debug.Log($"Hit={hit.transform.name}");
-                hit.transform.GetComponent<MonsterCtrl>()?.OnDamage(hit.point, hit.normal);
+                // 1단계: 무엇이라도 맞았는지 로그 찍기 (로그가 뜨는지 보세요!)
+                Debug.Log($"레이캐스트 충돌: {hit.transform.name}");
+
+                // 2단계: 본인부터 부모까지 뒤져서 스크립트 찾기
+                var monster = hit.transform.GetComponentInParent<MonsterCtrl>();
+
+                if (monster != null)
+                {
+                    monster.OnDamage(hit.point, hit.normal);
+                }
             }
         } 
-    }
+}
     void Fire()
     {   
         Instantiate(bullet, firePos.position, firePos.rotation);

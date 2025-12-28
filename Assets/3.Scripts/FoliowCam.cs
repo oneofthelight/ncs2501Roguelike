@@ -10,13 +10,13 @@ public class FoliowCam : MonoBehaviour
     private Transform camTr;
     // 대상으로부터 거리
     [Range(2.0f, 20.0f)]
-    public float distance = 10.0f;
+    public float distance = 5.0f;
     // y축 높이
     [Range(0.0f, 10.0f)]
-    public float height = 2.0f;
+    public float height = 3.0f;
     // 반응 속도
     public float damping = 10.0f;
-    public float targetTrOffset = 2.0f; 
+    public float targetTrOffset = 1.5f; 
     private Vector3 velocity = Vector3.zero;
     void Start()
     {   

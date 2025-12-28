@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="Root">
+        <ui:VisualElement name="Back" style="height: 1440px; width: 2224px; opacity: 0; position: absolute; top: -220px; left: -172px; display: none;" />
+        <ui:VisualElement name="GameOverGroup" style="position: absolute; height: 1352px; width: 2152px; top: -160px; left: -132px; background-color: rgb(0, 0, 0); display: none;">
+            <ui:Label text="Game Over" display-tooltip-when-elided="true" enable-rich-text="false" name="GameOverText" style="position: absolute; height: 159px; width: 706px; top: 624px; left: 700px; font-size: 116px; color: rgb(255, 247, 247); -unity-font: url(&apos;project://database/Assets/TextMesh%20Pro/Examples%20&amp;%20Extras/Fonts/Bangers.ttf?fileID=12800000&amp;guid=5dd49b3eacc540408c98eee0de38e0f1&amp;type=3#Bangers&apos;);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="GameClearGroup" style="position: absolute; height: 1140px; width: 1960px; left: -24px; top: -56px; font-size: 116px; background-color: rgb(0, 44, 255); display: none;">
+            <ui:Label text="Congratulation!! The end!" display-tooltip-when-elided="true" name="GameClearText" style="color: rgb(255, 255, 255); position: absolute; height: 157px; width: 1373px; top: 336px; left: 236px; -unity-font: url(&apos;project://database/Assets/TextMesh%20Pro/Examples%20&amp;%20Extras/Fonts/Oswald-Bold.ttf?fileID=12800000&amp;guid=c9f6d0e7bc8541498c9a4799ba184ede&amp;type=3#Oswald-Bold&apos;);" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

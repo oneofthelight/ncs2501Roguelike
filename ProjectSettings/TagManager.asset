@@ -11,6 +11,7 @@ TagManager:
   - MONSTER
   - PLAYER
   - Enemy
+  - GameOverUI
   layers:
   - Default
   - TransparentFX

@@ -101,6 +101,7 @@ MonoBehaviour:
   Health: 4
   Amount: 4
   healAmountOnDeath: 30
+  deathSfx: {fileID: 8300000, guid: 114514a3b3697484ebaa08f7fbf842d3, type: 3}
 --- !u!95 &1785452708307544483
 Animator:
   serializedVersion: 5

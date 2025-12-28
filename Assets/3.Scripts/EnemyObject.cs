@@ -8,6 +8,8 @@ public class EnemyObject : CellObject
     public int Amount = 3;
     public int healAmountOnDeath = 10;
     private int m_CurrentHealth;
+    [Header("Audio Settings")]
+    public AudioClip deathSfx; // 🚨 [추가] 사망 시 재생할 오디오 클립
 
     // 🚨 [추가] Animator 컴포넌트 참조
     private Animator m_Animator;
@@ -42,8 +44,15 @@ public class EnemyObject : CellObject
 
         m_CurrentHealth -= 1;
         Debug.Log(m_CurrentHealth);
+
         if (m_CurrentHealth <= 0)
         {
+            // 🚨 [추가] 죽기 전에 GameManager의 PlaySound 함수 호출
+            if (GameManager.Instance != null && deathSfx != null)
+            {
+                GameManager.Instance.PlaySound(deathSfx);
+            }
+
             if (GameManager.Instance != null && !GameManager.Instance.IsGameOver)
             {
                 GameManager.Instance.UpdateHPBar(healAmountOnDeath);

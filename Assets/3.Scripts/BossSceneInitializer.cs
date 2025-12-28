@@ -1,12 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UIElements;
 
 public class BossSceneInitializer : MonoBehaviour
 {
+    public UIDocument bossUIDoc;
+
+    // BossSceneInitializer.cs
     void Start()
     {
-        // 씬 시작 시 GameManager 설정 및 생성 루틴 시작
-        StartCoroutine(SpawnRoutine());
+        // 씬에 배치된 UIDocument를 찾아서 GameManager에 전달
+        UIDocument bossUI = FindObjectOfType<UIDocument>();
+        if (GameManager.instance != null && bossUI != null)
+        {
+            GameManager.instance.SetupBossSceneUI(bossUI);
+            Debug.Log("GameManager에게 보스 UI 전달 완료");
+        }
     }
 
     IEnumerator SpawnRoutine()
